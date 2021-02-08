@@ -16,9 +16,5 @@ module.exports = {
             username:'apbkaboomb@hotmail.com',
             password:'Rockleone1@'
         },
-        {
-            username:'mattrodriguez2000@gmail.com',
-            password:'Monok...7'
-        }
     ]
 }
