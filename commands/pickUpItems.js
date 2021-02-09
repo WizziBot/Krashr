@@ -1,13 +1,13 @@
 module.exports = {
     name: 'pickUpItems',
     description: "Picks up nearby items",
-    execute(message,pickUpItems,commandArgs,botId){
+    execute(message,pickUpItems,commandArgs,botId,krashr){
         try{
             const splitArgs = commandArgs.split(' ');
             const maxdist = splitArgs.shift();
             const destroy = splitArgs.join(' ');
             if (!maxdist){
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`Syntax: \`-pickupitems [max_distance/off] (canbuild[yes])\``)
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`Syntax: \`-pickupitems [max_distance/off] (canbuild[yes])\``)
                 return pickUpItems;
             } else if(maxdist === 'off'){
                 pickUpItems.do = false;
@@ -27,7 +27,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 console.log(`[ID:${botId}] [PICK UP ITEMS] : [OFF]`)
                 return pickUpItems;
             } else{
@@ -50,14 +50,14 @@ module.exports = {
                             icon_url: message.guild.iconURL(),
                         },
                     };
-                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                     console.log(`[ID:${botId}] [PICK UP ITEMS] : [ON]`)
                     return pickUpItems;
                 }
             }
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ERROR] try using the correct syntax: \`-pickupitems [max_distance/off] (canbuild[yes])\``)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[ERROR] try using the correct syntax: \`-pickupitems [max_distance/off] (canbuild[yes])\``)
         }
     }
 }

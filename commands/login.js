@@ -1,8 +1,11 @@
 module.exports = {
     name: 'login',
     description: "Logs the bot onto a server",
-    async execute(botId,account,client,message,commandArgs,mineflayer,getChatOn,addBot){
+    async execute(botId,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr){
         try{
+            const mc = require('minecraft-protocol')
+            const ProxyAgent = require('proxy-agent');
+            const socks = require('socks').SocksClient
             const { pathfinder } = require('mineflayer-pathfinder');
             const autoeat = require("mineflayer-auto-eat");
             //MINECRAFT BOT
@@ -12,13 +15,39 @@ module.exports = {
             if (!accessPort){
                 accessPort = 25565
             }
-            bot = mineflayer.createBot({
-                host: serverIp,
-                port: accessPort,
+            let bot = mineflayer.createBot({
+                connect: client => {
+                    socks.createConnection({
+                    proxy: {
+                        host: krashr.proxy.ip,
+                        port: parseInt(krashr.proxy.port),
+                        type: 5
+                    },
+                    command: 'connect',
+                    destination: {
+                        host: serverIp,
+                        port: parseInt(accessPort)
+                    }
+                    }, (err, info) => {
+                    if (err) {
+                        console.log(err)
+                        return
+                    }
+                
+                    client.setSocket(info.socket)
+                    client.emit('connect')
+                    })
+                },
+                agent: new ProxyAgent({ protocol: 'socks5:', host: krashr.proxy.ip, port: krashr.proxy.port }),
                 username: account.username,
-                password: account.password,
-                version: false,
+                password: account.password
             });
+            bot.on('connect', function (spawn) {
+                console.log("Logged in")
+            });
+            bot.on('end', packet => {
+                console.log("Connection ended abruptly")
+            })
             bot.loadPlugin(pathfinder);
             bot.loadPlugin(autoeat)
             bot.once('login', () => {
@@ -36,7 +65,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
             })
             bot.on('spawn', () => {
                 try{
@@ -62,9 +91,9 @@ module.exports = {
                             icon_url: message.guild.iconURL(),
                         },
                     };
-                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 } catch{
-                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send('Error while loading spawn event')
+                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send('Error while loading spawn event')
                 }
 
             })
@@ -101,7 +130,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 console.log(reason, loggedIn)
             })
             bot.on('error', (err) => {
@@ -118,13 +147,13 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 console.log(err)
             })
             addBot(bot)
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ERROR] Try using the correct syntax: \`-login serverIp port\``)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[ERROR] Try using the correct syntax: \`-login serverIp port\``)
         }
     }
 }

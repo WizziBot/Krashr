@@ -1,7 +1,7 @@
 module.exports = {
     name: 'coordinates',
     description: "Shows bot's coordinates",
-    execute(message,bot){
+    execute(message,bot,krashr){
         try{
             let pos = bot.entity.position;
             let coordinates = []
@@ -20,10 +20,10 @@ module.exports = {
                     icon_url: message.guild.iconURL(),
                 },
             };
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNKNOWN ERROR]`)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[UNKNOWN ERROR]`)
         }
     }
 }

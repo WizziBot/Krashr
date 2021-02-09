@@ -1,7 +1,7 @@
 module.exports = {
     name: 'cancelFollowPlayer',
     description: "Stops following the player",
-    execute(message,followPlayer,bot,botId){
+    execute(message,followPlayer,bot,botId,krashr){
         try{
             if(followPlayer.follow === true){
                 console.log(`[ID:${botId}] [FOLLOW PLAYER (${followPlayer.player})] : [OFF]`)
@@ -18,7 +18,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 followPlayer.follow = false;
                 followPlayer.destroy = false;
                 followPlayer.player = null;
@@ -26,7 +26,7 @@ module.exports = {
             return followPlayer;
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNKNOWN ERROR]`)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[UNKNOWN ERROR]`)
         }
     }
 }

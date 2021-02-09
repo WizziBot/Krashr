@@ -1,13 +1,13 @@
 module.exports = {
     name: 'followPlayer',
     description: "Follows the player",
-    execute(message,followPlayer,commandArgs,botId){
+    execute(message,followPlayer,commandArgs,botId,krashr){
         try{
             const splitArgs = commandArgs.split(' ');
             const player = splitArgs.shift();
             const destroy = splitArgs.join(' ');
             if (!player){
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`Syntax : \`-follow username (canbuild[yes])\``);
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`Syntax : \`-follow username (canbuild[yes])\``);
                 return;
             }
             if(followPlayer.follow === false){
@@ -29,12 +29,12 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
             }
             return followPlayer;
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ERROR] Try using the correct syntax: \`-follow username (canbuild[yes])\``)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[ERROR] Try using the correct syntax: \`-follow username (canbuild[yes])\``)
         }
     }
 }

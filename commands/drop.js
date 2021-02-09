@@ -1,14 +1,14 @@
 module.exports = {
     name: 'drop',
     description: "Drops all or specific item",
-    async execute(message,commandArgs,bot){
+    async execute(message,commandArgs,bot,krashr){
         try{
             const splitArgs = commandArgs.split(' ');
             const setting = splitArgs.shift();
             const slot = splitArgs.shift();
             const amount = splitArgs.join(' ');
             if (!setting){
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`Syntax : \`-drop [all/slot] (slot number)\``);
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`Syntax : \`-drop [all/slot] (slot number)\``);
                 return;
             }
             function updateEmbed(){
@@ -47,7 +47,7 @@ module.exports = {
                             icon_url: message.guild.iconURL(),
                         },
                     };
-                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embedNoItem})
+                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embedNoItem})
                 } else if (amount) {
                     bot.toss(item.type, null, amount, checkIfTossed)
                 } else {
@@ -69,7 +69,7 @@ module.exports = {
                                 icon_url: message.guild.iconURL(),
                             },
                         };
-                        message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                        message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                         console.log(err.message)
                     } else if (amount) {
                         embedDropped.fields.push({
@@ -103,7 +103,7 @@ module.exports = {
                     icon_url: message.guild.iconURL(),
                 },
             };
-            let messageDropped = await message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embedDropped})
+            let messageDropped = await message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embedDropped})
             let getItems = new Promise((resolve,reject) =>{
                 let temp = [];
                 bot.inventory.items().forEach(item => {
@@ -131,7 +131,7 @@ module.exports = {
 
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ERROR] Try using the correct syntax \`-drop [all/slot] (slot number)\``)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[ERROR] Try using the correct syntax \`-drop [all/slot] (slot number)\``)
         }
     }
 }

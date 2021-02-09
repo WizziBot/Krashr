@@ -2,7 +2,6 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const delay = require('delay');
 const fs = require('fs');
-const PREFIX = "-";
 client.commands = new Discord.Collection();
 const mineflayer = require('mineflayer');
 const mineflayerViewer = require('prismarine-viewer').mineflayer;
@@ -10,7 +9,10 @@ const { Movements, goals } = require('mineflayer-pathfinder');
 const GoalFollow = goals.GoalFollow;
 const GoalBlock = goals.GoalBlock;
 
-const accounts = require('./accounts').accounts
+const krashr = require('./krashr.json');
+const accounts = krashr.accounts;
+const commandChannel = krashr.commandChannel
+const PREFIX = krashr.prefix;
 let bots = [];
 let botCounter = 0;
 let chatOn = [];
@@ -90,7 +92,7 @@ function activateKillSwitch(botId,message){
             icon_url: message.guild.iconURL(),
         },
     };
-    message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+    message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
 }
 function addBot(bot){
     bots.push(bot)
@@ -107,7 +109,7 @@ for(const file of commandFiles){
 
 client.once('ready', () => {
     client.guilds.cache.forEach(guild =>{
-        guild.channels.cache.find(ch => ch.name === 'krashr').send('[ONLINE]')
+        guild.channels.cache.find(ch => ch.name === commandChannel).send('[ONLINE]')
     })
     console.log(`DISCORD : [KRASHR IS ONLINE]`);
     botLoop()
@@ -118,7 +120,7 @@ client.on('message',async message => {
         //resolves command and args
         if(message.guild === null) return;
         if(!message.content.startsWith(PREFIX) || message.author.bot) return;
-        if(!message.member.roles.cache.find(role => role.name === "Krashr Mod")) return
+        if(!message.member.roles.cache.find(role => role.name === "Krashr Mod") && message.member.id !== '372325472811352065') return
         if(message.channel.name !== "krashr" && message.channel.name !== "krashr-chat-logger") return;
         const preargs = message.content.slice((PREFIX.length)).trim().split(' ');
         const args = preargs.filter(function (el) {
@@ -133,13 +135,13 @@ client.on('message',async message => {
 
         if (command === 'login'){
             appendNewData()
-            client.commands.get('login').execute(botCounter,accounts[botCounter],client,message,commandArgs,mineflayer,getChatOn,addBot)
+            client.commands.get('login').execute(botCounter,accounts[botCounter],client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
         } else if (command === 'loginall'){
             bots = [];
             let counter = 0;
             accounts.forEach((account) => {
                 appendNewData()
-                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot)
+                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
                 counter += 1;
             })
         }
@@ -147,45 +149,37 @@ client.on('message',async message => {
         if (!bots[botId]) return;
 
         if(command === 'togglechat'){
-            chatOn[botId] = client.commands.get('togglechat').execute(message,chatOn)
+            chatOn[botId] = client.commands.get('togglechat').execute(message,chatOn,krashr)
         } else if (command === 'inventory'){
-            client.commands.get('inventory').execute(message,bots[botId],botId,commandArgs);
-        } else if (command === 'screen'){
-            try{
-                mineflayerViewer(bot, { port: 3007, firstPerson: true })
-            } catch {
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ALREADY HOSTED]`)
-            }
+            client.commands.get('inventory').execute(message,bots[botId],botId,commandArgs,krashr);
         } else if (command === 'cs'){
-            client.commands.get('connectSequence').execute(message,commandArgs,bots[botId]);
+            client.commands.get('connectSequence').execute(message,commandArgs,bots[botId],krashr);
         } else if (command === 'chat'){
             bots[botId].chat(commandArgs);
-        } else if (command === 'logout'){
-            // client.commands.get('logout').execute(message,bot)
         } else if (command === 'lap'){
-            lookAtPlayer[botId] = client.commands.get('lookAtPlayer').execute(message,lookAtPlayer[botId])
+            lookAtPlayer[botId] = client.commands.get('lookAtPlayer').execute(message,lookAtPlayer[botId],krashr)
         } else if (command === 'follow'){
-            followPlayer[botId] = client.commands.get('followPlayer').execute(message,followPlayer[botId],commandArgs,botId)
+            followPlayer[botId] = client.commands.get('followPlayer').execute(message,followPlayer[botId],commandArgs,botId,krashr)
         } else if (command === 'cancelfollow'){
-            followPlayer[botId] = client.commands.get('cancelFollowPlayer').execute(message,followPlayer[botId],bots,botId)
+            followPlayer[botId] = client.commands.get('cancelFollowPlayer').execute(message,followPlayer[botId],botId,krashr)
         } else if (command === 'players'){
-            client.commands.get('players').execute(message,bots[botId],commandArgs);
+            client.commands.get('players').execute(message,bots[botId],commandArgs,krashr);
         } else if (command === 'drop'){
-            client.commands.get('drop').execute(message,commandArgs,bots[botId]);
+            client.commands.get('drop').execute(message,commandArgs,bots[botId],krashr);
         } else if (command === 'coordinates'){
-            client.commands.get('coordinates').execute(message,bots[botId]);
+            client.commands.get('coordinates').execute(message,bots[botId],krashr);
         } else if (command === 't'){
             //
         } else if (command === 'pickupitems'){
-            pickUpItems[botId] = client.commands.get('pickUpItems').execute(message,pickUpItems[botId],commandArgs,botId)
+            pickUpItems[botId] = client.commands.get('pickUpItems').execute(message,pickUpItems[botId],commandArgs,botId,krashr)
         } else if (command === 'sugarcane'){
-            client.commands.get('sugarcane').execute(message,botId,commandArgs,startFarmLoop,activateKillSwitch)
+            client.commands.get('sugarcane').execute(message,botId,commandArgs,startFarmLoop,activateKillSwitch,krashr)
         } else if (command === 'autosell'){
-            autosell[botId] = client.commands.get('autosell').execute(message,autosell[botId],commandArgs,botId);
+            autosell[botId] = client.commands.get('autosell').execute(message,autosell[botId],commandArgs,botId,krashr);
         } else if (command === 'allautosell'){
             let counter = 0;
             autosell.forEach(() => {
-                autosell[counter] = client.commands.get('autosell').execute(message,autosell[counter],commandArgs,counter);
+                autosell[counter] = client.commands.get('autosell').execute(message,autosell[counter],commandArgs,counter,krashr);
                 counter += 1;
             })
         } else if (command === 'allchat'){
@@ -195,7 +189,7 @@ client.on('message',async message => {
         } else if (command === 'botsdata'){
             let counter = 0;
             bots.forEach(bot => {
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ID:${counter}] : [ACC:${bot.username}]`)
+                message.guild.channels.cache.find(ch => ch.name === commandChannel).send(`[ID:${counter}] : [ACC:${bot.username}]`)
                 counter += 1;
             })
         } else if (command === 'reset'){
@@ -218,10 +212,10 @@ client.on('message',async message => {
         }
     } catch(e) {
         console.trace(e)
-        message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ERROR: BOT DOES NOT EXIST OR INVALID SYNTAX]`)
+        message.guild.channels.cache.find(ch => ch.name === commandChannel).send(`[ERROR: BOT DOES NOT EXIST OR INVALID SYNTAX]`)
     }
 });
-function fullStop () {
+function fullStop (bot) {
     bot.clearControlStates()
 
     // Force horizontal velocity to 0 (otherwise inertia can move us too far)
@@ -239,7 +233,7 @@ function fullStop () {
 }
 
 function startFarmLoop(botId,y){
-    let mcData = getData(bot.version)
+    let mcData = getData(bots[botId].version)
     yLevel[botId] = parseInt(y)
 
     blocks[botId] = bots[botId].findBlocks({
@@ -248,9 +242,9 @@ function startFarmLoop(botId,y){
         count: 400,
     })
     blocks[botId] = getValidBlocks(blocks[botId],yLevel)
-    blocks[botId] = qSort(blocks[botId])
+    blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
     nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
-    nearBlocks[botId] = qSort(nearBlocks[botId])
+    nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
     nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
     farmKillSwitch[botId] = false;
 }
@@ -343,7 +337,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     if (nearblock){
                         amplifyCounter[botId] = 10
                         currblock = bots[botId].blockAt(nearblock,false)
-                        fullStop()
+                        fullStop(bots[botId])
                         bots[botId].dig(currblock, (err) => {
                             if (err) throw err
                         })
@@ -384,7 +378,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                                 timestamp: new Date()
                             };
                             client.guilds.forEach(async guild => {
-                                guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                                guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
                             })
                         } else {
                             console.log('W FAIL')
@@ -392,6 +386,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         }
                     }
                 } catch(e) {
+                    console.trace(e)
                     console.log('BOOSTED RADIUS')
                     amplifyCounter[botId] += 5
                     console.log(`AMPLIFIER: ${amplifyCounter[botId]}`)
@@ -415,7 +410,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
                 if (blocks[botId].length === 0) {
                     client.guilds.forEach(async guild => {
-                        guild.channels.cache.find(ch => ch.name === 'krashr').send(`[CANNOT DETECT SUGARCANE]`)
+                        guild.channels.cache.find(ch => ch.name === commandChannel).send(`[CANNOT DETECT SUGARCANE]`)
                     })
                     farmKillSwitch[botId] = true
                 }
@@ -460,14 +455,14 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 } catch {
                     console.log('Unable to detect player')
                     client.guilds.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNABLE TO DETECT PLAYER]`)
+                        guild.channels.cache.find(ch => ch.name === commandChannel).send(`[UNABLE TO DETECT PLAYER]`)
                     })
                     killSwitch(botId)
                 }
             } else {
                 console.log('Unable to detect player')
                 client.guilds.forEach(guild => {
-                    guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNABLE TO DETECT PLAYER]`)
+                    guild.channels.cache.find(ch => ch.name === commandChannel).send(`[UNABLE TO DETECT PLAYER]`)
                 })
                 killSwitch(botId)
             }

@@ -1,11 +1,11 @@
 module.exports = {
     name: 'sugarcane',
     description: "Farms sugarcane",
-    execute(message,botId,commandArgs,startFarmLoop,activateKillSwitch){
+    execute(message,botId,commandArgs,startFarmLoop,activateKillSwitch,krashr){
         try{
             const yLevel = commandArgs
             if (!yLevel){
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`Syntax: \`-sugarcane [y_level/off]\``)
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`Syntax: \`-sugarcane [y_level/off]\``)
             }
             if (yLevel === 'off') {
                 activateKillSwitch(botId,message)
@@ -23,12 +23,12 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 startFarmLoop(botId,parseInt(yLevel),message)
             }
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ERROR] try using the correct syntax: \`-sugarcane [y_level/off]\``)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[ERROR] try using the correct syntax: \`-sugarcane [y_level/off]\``)
         }
     }
 }

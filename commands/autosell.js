@@ -1,12 +1,12 @@
 module.exports = {
     name: 'autosell',
     description: "Automatically sells all when inventory is full",
-    async execute(message,autosell,commandArgs,botId){
+    async execute(message,autosell,commandArgs,botId,krashr){
         try{
             const setting = commandArgs
 
             if (!setting){
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`Syntax : \`-autosell [on/off]\``);
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`Syntax : \`-autosell [on/off]\``);
                 return;
             }
             if(setting === 'on'){
@@ -24,7 +24,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
             } else if (setting === 'off'){
                 autosell = false
                 const embed = {
@@ -40,12 +40,12 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
             }
             return autosell;
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNKNOWN ERROR]`)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[UNKNOWN ERROR]`)
         }
     }
 }

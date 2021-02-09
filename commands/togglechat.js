@@ -1,7 +1,7 @@
 module.exports = {
     name: 'togglechat',
     description: "Toggles the minecraft chat",
-    execute(message,chatOn){
+    execute(message,chatOn,krashr){
         try{
             if(chatOn === false){
                 chatOn = true;
@@ -18,7 +18,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 console.log('[ID:0] [MINECRAFT CHAT] : [ON]')
             } else if(chatOn === true){
                 chatOn = false;
@@ -35,13 +35,13 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 console.log('[ID:0] [MINECRAFT CHAT] : [OFF]')
             }
             return chatOn;
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNKNOWN ERROR]`)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[UNKNOWN ERROR]`)
         }
     }
 }

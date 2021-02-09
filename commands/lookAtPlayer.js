@@ -1,7 +1,7 @@
 module.exports = {
     name: 'lookAtPlayer',
     description: "Looks at the player",
-    execute(message,lookAtPlayer){
+    execute(message,lookAtPlayer,krashr){
         try{
             if(lookAtPlayer === false){
                 lookAtPlayer = true;
@@ -18,7 +18,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 console.log('[LOOK AT PLAYER] : [ON]')
             } else if(lookAtPlayer === true){
                 lookAtPlayer = false;
@@ -35,13 +35,13 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
                 console.log('[LOOK AT PLAYER] : [OFF]')
             }
             return lookAtPlayer;
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNKNOWN ERROR]`)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[UNKNOWN ERROR]`)
         }
     }
 }

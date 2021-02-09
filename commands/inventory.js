@@ -1,14 +1,14 @@
 module.exports = {
     name: 'inventory',
     description: "Shows whats in the player's inventory",
-    async execute(message,bot,botId,commandArgs){
+    async execute(message,bot,botId,commandArgs,krashr){
         try{
             const splitArgs = commandArgs.split(' ');
             const setting = splitArgs.shift();
             const slot = splitArgs.join(' ');
 
             if (!setting){
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`Syntax : \`-inventory [raw/names/slot] (slot number)\``);
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`Syntax : \`-inventory [raw/names/slot] (slot number)\``);
                 return;
             }
             let getItems = new Promise((resolve,reject) =>{
@@ -21,7 +21,7 @@ module.exports = {
             getItems.then(async items => {
                 if (setting == 'raw'){
                     items.forEach(item => {
-                        message.guild.channels.cache.find(ch => ch.name === 'krashr').send(JSON.stringify(item))
+                        message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(JSON.stringify(item))
                     })
                 } else if (setting === 'names'){
                     async function updateEmbed(items){
@@ -44,7 +44,7 @@ module.exports = {
                                 inline: true,
                             }];
                             newMessage = new Promise(async (resolve,reject)=>{
-                                let temp = await message.guild.channels.cache.find(ch => ch.name === 'krashr').send({ embed: embedInv })
+                                let temp = await message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({ embed: embedInv })
                                 resolve(temp)
                             })
                             newMessage.then((newmsg)=>{
@@ -78,20 +78,20 @@ module.exports = {
                             icon_url: message.guild.iconURL(),
                         },
                     };
-                    let messageInv = await message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embedInv})
+                    let messageInv = await message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embedInv})
                     //---
                     updateEmbed(items)
                 } else if (setting === 'slot'){
                     items.forEach(item => {
                         if (item.slot === parseInt(slot)){
-                            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(JSON.stringify(item))
+                            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(JSON.stringify(item))
                         }
                     })
                 }
             });
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ERROR] Try using the correct syntax \`-inventory [raw/names/slot] (slot number)\``)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[ERROR] Try using the correct syntax \`-inventory [raw/names/slot] (slot number)\``)
         }
     }
 }

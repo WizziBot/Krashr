@@ -1,16 +1,16 @@
 module.exports = {
     name: 'players',
     description: "Shows online players",
-    async execute(message,bot,commandArgs){
+    async execute(message,bot,commandArgs,krashr){
         try{
             let messagePlayers;
             if (commandArgs === 'all'){
                 let counter = 0;
                 Object.values(bot.players).forEach(player => {
-                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send(player.username);
+                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(player.username);
                     counter += 1;
                 })
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[\`${counter}\` PLAYERS]`);
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[\`${counter}\` PLAYERS]`);
             } else {
                 async function loadNames(players){
                     let player = players.shift();
@@ -31,7 +31,7 @@ module.exports = {
                             inline: true,
                         }];
                         newMessage = new Promise(async (resolve,reject)=>{
-                            let temp = await message.guild.channels.cache.find(ch => ch.name === 'krashr').send({ embed: embedPlayers })
+                            let temp = await message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({ embed: embedPlayers })
                             resolve(temp)
                         })
                         newMessage.then((newmsg)=>{
@@ -64,13 +64,13 @@ module.exports = {
                     },
                 };
                 let playerCount = 0;
-                messagePlayers = await message.guild.channels.cache.find(ch => ch.name === 'krashr').send({ embed: embedPlayers })
+                messagePlayers = await message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({ embed: embedPlayers })
                 const players = Object.values(bot.players)
                 loadNames(players)
             }
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNKNOWN ERROR]`)
+            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[UNKNOWN ERROR]`)
         }
     }
 }
