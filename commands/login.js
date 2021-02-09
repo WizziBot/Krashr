@@ -3,9 +3,6 @@ module.exports = {
     description: "Logs the bot onto a server",
     async execute(botId,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr){
         try{
-            const mc = require('minecraft-protocol')
-            const ProxyAgent = require('proxy-agent');
-            const socks = require('socks').SocksClient
             const { pathfinder } = require('mineflayer-pathfinder');
             const autoeat = require("mineflayer-auto-eat");
             //MINECRAFT BOT
@@ -16,31 +13,11 @@ module.exports = {
                 accessPort = 25565
             }
             let bot = mineflayer.createBot({
-                connect: client => {
-                    socks.createConnection({
-                    proxy: {
-                        host: krashr.proxy.ip,
-                        port: parseInt(krashr.proxy.port),
-                        type: 5
-                    },
-                    command: 'connect',
-                    destination: {
-                        host: serverIp,
-                        port: parseInt(accessPort)
-                    }
-                    }, (err, info) => {
-                    if (err) {
-                        console.log(err)
-                        return
-                    }
-                
-                    client.setSocket(info.socket)
-                    client.emit('connect')
-                    })
-                },
-                agent: new ProxyAgent({ protocol: 'socks5:', host: krashr.proxy.ip, port: krashr.proxy.port }),
+                host: serverIp,
+                port: accessPort,
                 username: account.username,
-                password: account.password
+                password: account.password,
+                version: false,
             });
             bot.on('connect', function (spawn) {
                 console.log("Logged in")
