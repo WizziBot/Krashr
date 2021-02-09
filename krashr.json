@@ -3,8 +3,9 @@
         {
             "username":"",
             "password":""
-        },
+        }
     ],
     "commandChannel": "krashr",
-    "prefix": "-"
+    "prefix": "-",
+    "token":""
 }
