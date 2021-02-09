@@ -123,6 +123,7 @@ client.on('message',async message => {
             appendNewData()
             client.commands.get('login').execute(botCounter,accounts[botCounter],client,message,commandArgs,mineflayer,getChatOn,addBot)
         } else if (command === 'loginall'){
+            bots = [];
             let counter = 0;
             accounts.forEach((account) => {
                 appendNewData()
@@ -185,6 +186,19 @@ client.on('message',async message => {
                 message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ID:${counter}] : [ACC:${bot.username}]`)
                 counter += 1;
             })
+        } else if (command === 'reset'){
+            bots.forEach(bot =>{
+                bot.quit()
+            })
+            botCounter = 0
+            bots = []
+            chatOn = [];
+            lookAtPlayer = [];
+            pickUpItems = [];
+            followPlayer = [];
+            autosell = [];
+            autoeat = [];
+            farmKillSwitch = [];
         }
     } catch(e) {
         console.trace(e)
@@ -209,30 +223,32 @@ function fullStop () {
   }
 
 function startFarmLoop(botId,yLevel,message){
-    farmKillSwitch[botId] = false;
-    function mineBlocks(blocks,mcData){
-        if (farmKillSwitch[botId]) {
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ID:${botId}] [AUTO FARMING] : [OFF]`)
-            return
-        }
-        let shiftblock = blocks.shift()
-        if (shiftblock){
-            try{
-                if (shiftblock.y !== yLevel){
-                    while (shiftblock.y !== yLevel){
-                        shiftblock = blocks.shift()
+    try{
+        farmKillSwitch[botId] = false;
+        function mineBlocks(blocks,mcData){
+            if (farmKillSwitch[botId]) {
+                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ID:${botId}] [AUTO FARMING] : [OFF]`)
+                return
+            }
+            let shiftblock = blocks.shift()
+            if (shiftblock){
+                try{
+                    if (shiftblock.y !== yLevel){
+                        while (shiftblock.y !== yLevel){
+                            shiftblock = blocks.shift()
+                        }
                     }
-                }
-                let currblock = bots[botId].blockAt(shiftblock,false)
-                let movements = new Movements(bot, mcData)
-                movements.canDig = false;
-                movements.scafoldingBlocks = []
-                bots[botId].pathfinder.setMovements(movements)
+                    let currblock = bots[botId].blockAt(shiftblock,false)
+                    let movements = new Movements(bot, mcData)
+                    movements.canDig = false;
+                    movements.scafoldingBlocks = []
+                    bots[botId].pathfinder.setMovements(movements)
 
-                let goal = new GoalBlock(shiftblock.x, shiftblock.y - 1, shiftblock.z)
-                bots[botId].pathfinder.setGoal(goal,false)
-                if(calcDistance(bots[botId].entity.position,goal) > 4){
-                    setTimeout(()=>{
+                    let goal = new GoalBlock(shiftblock.x, shiftblock.y - 1, shiftblock.z)
+                    bots[botId].pathfinder.setGoal(goal,false)
+                    if(calcDistance(bots[botId].entity.position,goal) > 4){
+                        mineBlocks(blocks,mcData)
+                    } else {
                         fullStop()
                         bots[botId].dig(currblock, (err) => {
                             if (err) console.trace(err)
@@ -240,17 +256,26 @@ function startFarmLoop(botId,yLevel,message){
                                 mineBlocks(blocks,mcData)
                             },100)
                         })
-                    },1000)
-                } else {
-                    fullStop()
-                    bots[botId].dig(currblock, (err) => {
-                        if (err) console.trace(err)
-                        setTimeout(()=>{
-                            mineBlocks(blocks,mcData)
-                        },100)
+                    }
+                } catch(e) {
+                    try{
+                    let blocks = bots[botId].findBlocks({
+                        matching: mcData.blocksByName.sugar_cane.id,
+                        maxDistance: 10,
+                        count: 200,
                     })
+                    if (blocks.length === 0) {
+                        message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[CANNOT DETECT SUGARCANE]`)
+                        return
+                    }
+                    setTimeout(() => {
+                        mineBlocks(blocks,mcData)
+                    },500)
+                    } catch(e) {
+                        console.trace(e)
+                    }
                 }
-            } catch(e) {
+            } else {
                 let blocks = bots[botId].findBlocks({
                     matching: mcData.blocksByName.sugar_cane.id,
                     maxDistance: 10,
@@ -264,30 +289,19 @@ function startFarmLoop(botId,yLevel,message){
                     mineBlocks(blocks,mcData)
                 },500)
             }
-        } else {
-            let blocks = bots[botId].findBlocks({
-                matching: mcData.blocksByName.sugar_cane.id,
-                maxDistance: 10,
-                count: 200,
-            })
-            if (blocks.length === 0) {
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[CANNOT DETECT SUGARCANE]`)
-                return
-            }
-            setTimeout(() => {
-                mineBlocks(blocks,mcData)
-            },500)
         }
-    }
 
-    //start loop
-    let mcData = getData(bots[botId].version)
-    let blocks = bots[botId].findBlocks({
-        matching: mcData.blocksByName.sugar_cane.id,
-        maxDistance: 10,
-        count: 50,
-    })
-    mineBlocks(blocks,mcData)
+        //start loop
+        let mcData = getData(bots[botId].version)
+        let blocks = bots[botId].findBlocks({
+            matching: mcData.blocksByName.sugar_cane.id,
+            maxDistance: 10,
+            count: 50,
+        })
+        mineBlocks(blocks,mcData)
+    } catch(e){
+        //pass
+    }
 }
 const getData = require('minecraft-data');
 function calcDistance(botPos,itemPos){
@@ -345,12 +359,16 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell){
                     bot.pathfinder.setGoal(goal,false)
                 } catch {
                     console.log('Unable to detect player')
-                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNABLE TO DETECT PLAYER]`)
+                    client.guilds.forEach(guild => {
+                        guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNABLE TO DETECT PLAYER]`)
+                    })
                     killSwitch(botId)
                 }
             } else {
                 console.log('Unable to detect player')
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNABLE TO DETECT PLAYER]`)
+                client.guilds.forEach(guild => {
+                    guild.channels.cache.find(ch => ch.name === 'krashr').send(`[UNABLE TO DETECT PLAYER]`)
+                })
                 killSwitch(botId)
             }
         } if (autosell){
@@ -363,12 +381,13 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell){
             })
             getItems.then(items => {
                 if (items.length > 34){
+                    console.log(`[ID:${botId}] [SOLD ALL]`)
                     bots[botId].chat('/sell all')
                 }
             })
         }
     } catch(e){
-        console.trace(e);
+        //
     }
 }
 function botLoop(){

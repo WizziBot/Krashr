@@ -9,8 +9,8 @@ module.exports = {
             password:'Technoblode'
         },
         {
-            username:'connobot8659@gmail.com',
-            password:'Okmijnuhby8659!'
+            username:'mattrodriguez2000@gmail.com',
+            password:'Monok...7'
         },
         {
             username:'apbkaboomb@hotmail.com',

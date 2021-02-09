@@ -20,12 +20,24 @@ let followPlayer = [];
 let autosell = [];
 let autoeat = [];
 let farmKillSwitch = [];
+let yLevel = [];
+let blocks = [];
+let nearBlocks = [];
+let goal = [];
+let memoryWarning = [];
+let amplifyCounter = [];
 function appendNewData(){
     chatOn.push(false);
     lookAtPlayer.push(false);
     autosell.push(false)
     autoeat.push(false)
-    farmKillSwitch.push(false)
+    farmKillSwitch.push(true)
+    yLevel.push(0)
+    blocks.push(null)
+    nearBlocks.push(null)
+    goal.push(null)
+    memoryWarning.push(false)
+    amplifyCounter.push(10)
     pickUpItems.push({
         item:null,
         do: false,
@@ -123,6 +135,7 @@ client.on('message',async message => {
             appendNewData()
             client.commands.get('login').execute(botCounter,accounts[botCounter],client,message,commandArgs,mineflayer,getChatOn,addBot)
         } else if (command === 'loginall'){
+            bots = [];
             let counter = 0;
             accounts.forEach((account) => {
                 appendNewData()
@@ -185,6 +198,23 @@ client.on('message',async message => {
                 message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ID:${counter}] : [ACC:${bot.username}]`)
                 counter += 1;
             })
+        } else if (command === 'reset'){
+            bots.forEach(bot =>{
+                bot.quit()
+            })
+            botCounter = 0
+            bots = []
+            chatOn = [];
+            lookAtPlayer = [];
+            pickUpItems = [];
+            followPlayer = [];
+            autosell = [];
+            autoeat = [];
+            farmKillSwitch = [];
+            yLevel = [];
+            blocks = [];
+            nearBlocks = [];
+            goal = [];
         }
     } catch(e) {
         console.trace(e)
@@ -206,80 +236,23 @@ function fullStop () {
     // otherwise recenter the position
     if (Math.abs(bot.entity.position.x - blockX) > 0.2) { bot.entity.position.x = blockX }
     if (Math.abs(bot.entity.position.z - blockZ) > 0.2) { bot.entity.position.z = blockZ }
-  }
+}
 
-function startFarmLoop(botId,yLevel,message){
-    farmKillSwitch[botId] = false;
-    function mineBlocks(blocks,mcData){
-        if (farmKillSwitch[botId]) {
-            message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ID:${botId}] [AUTO FARMING] : [OFF]`)
-            return
-        }
-        let shiftblock = blocks.shift()
-        if (shiftblock){
-            try{
-                if (shiftblock.y !== yLevel){
-                    while (shiftblock.y !== yLevel){
-                        shiftblock = blocks.shift()
-                    }
-                }
-                let currblock = bots[botId].blockAt(shiftblock,false)
-                let movements = new Movements(bot, mcData)
-                movements.canDig = false;
-                movements.scafoldingBlocks = []
-                bots[botId].pathfinder.setMovements(movements)
+function startFarmLoop(botId,y){
+    let mcData = getData(bot.version)
+    yLevel[botId] = parseInt(y)
 
-                let goal = new GoalBlock(shiftblock.x, shiftblock.y - 1, shiftblock.z)
-                bots[botId].pathfinder.setGoal(goal,false)
-                if(calcDistance(bots[botId].entity.position,goal) > 4){
-                    mineBlocks(blocks,mcData)
-                } else {
-                    fullStop()
-                    bots[botId].dig(currblock, (err) => {
-                        if (err) console.trace(err)
-                        setTimeout(()=>{
-                            mineBlocks(blocks,mcData)
-                        },100)
-                    })
-                }
-            } catch(e) {
-                let blocks = bots[botId].findBlocks({
-                    matching: mcData.blocksByName.sugar_cane.id,
-                    maxDistance: 10,
-                    count: 200,
-                })
-                if (blocks.length === 0) {
-                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[CANNOT DETECT SUGARCANE]`)
-                    return
-                }
-                setTimeout(() => {
-                    mineBlocks(blocks,mcData)
-                },500)
-            }
-        } else {
-            let blocks = bots[botId].findBlocks({
-                matching: mcData.blocksByName.sugar_cane.id,
-                maxDistance: 10,
-                count: 200,
-            })
-            if (blocks.length === 0) {
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send(`[CANNOT DETECT SUGARCANE]`)
-                return
-            }
-            setTimeout(() => {
-                mineBlocks(blocks,mcData)
-            },500)
-        }
-    }
-
-    //start loop
-    let mcData = getData(bots[botId].version)
-    let blocks = bots[botId].findBlocks({
+    blocks[botId] = bots[botId].findBlocks({
         matching: mcData.blocksByName.sugar_cane.id,
         maxDistance: 10,
-        count: 50,
+        count: 400,
     })
-    mineBlocks(blocks,mcData)
+    blocks[botId] = getValidBlocks(blocks[botId],yLevel)
+    blocks[botId] = qSort(blocks[botId])
+    nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
+    nearBlocks[botId] = qSort(nearBlocks[botId])
+    nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
+    farmKillSwitch[botId] = false;
 }
 const getData = require('minecraft-data');
 function calcDistance(botPos,itemPos){
@@ -289,7 +262,63 @@ function calcDistance(botPos,itemPos){
     let dist = Math.sqrt((dx**2) + (dy**2) + (dz**2));
     return dist
 }
-function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell){
+function getValidBlocks(blocksToSort, yLevelGet){
+    try{
+        let tempBlocks = []
+        blocksToSort.forEach(block => {
+            if (block.y === yLevelGet) tempBlocks.push(block)
+        })
+        return tempBlocks;
+    } catch(e){
+        console.trace(e)
+    }
+}
+function getNearBlocks(blocksToSort,botPos){
+    try{
+        let tempBlocks = []
+        blocksToSort.forEach(block => {
+            if (calcDistance(botPos,block) < 5) tempBlocks.push(block)
+        })
+        return tempBlocks
+    } catch(e) {
+        console.trace(e)
+    }
+}
+function checkIfAir(bot,nearbyBlocks){
+    try{
+        let tempNearBlocks = []
+        nearbyBlocks.forEach(block => {
+            let data = bot.blockAt(block,false);
+            if (data.name === 'sugar_cane'){
+                tempNearBlocks.push(block)
+            }
+        })
+        return tempNearBlocks
+    } catch(e){
+        console.trace(e)
+    }
+}
+function qSort(blocksPos,botPos){
+    try{
+        if (blocksPos.length < 2){
+            return blocksPos
+        }
+        const pivot = blocksPos[blocksPos.length - 1];
+        const left = [],
+            right = []
+        for (let i = 0; i < blocksPos.length - 1; i++) {
+            if (calcDistance(botPos,blocksPos[i]) < calcDistance(botPos,pivot)) {
+            left.push(blocksPos[i])
+            } else {
+            right.push(blocksPos[i])
+            }
+        }
+        return [...qSort(left,botPos), pivot, ...qSort(right,botPos)]
+    } catch(e) {
+        console.trace(e)
+    }
+}
+function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel){
     try{
         let mcData = getData(bot.version)
         if (lookAtPlayer) {
@@ -300,6 +329,100 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell){
                 bot.lookAt(pos)
             }
         }
+        //## sugarcane farming algoritm VERSION 2.8.4 (iterative)
+        if (!farmKillSwitch[botId]) {
+            let shiftblock = blocks[botId].shift()
+            nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
+            if (nearBlocks[botId].length > 2){
+                nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
+            }
+            let nearblock = nearBlocks[botId].shift()
+            if (shiftblock || nearblock){
+                try{
+                    let currblock;
+                    if (nearblock){
+                        amplifyCounter[botId] = 10
+                        currblock = bots[botId].blockAt(nearblock,false)
+                        fullStop()
+                        bots[botId].dig(currblock, (err) => {
+                            if (err) throw err
+                        })
+                        let movements = new Movements(bot, mcData)
+                        movements.canDig = false;
+                        movements.scafoldingBlocks = []
+                        bots[botId].pathfinder.setMovements(movements)
+                        goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
+                        bots[botId].pathfinder.setGoal(goal[botId],false)
+                    } else {
+                        currblock = bots[botId].blockAt(shiftblock,false)
+                        let movements = new Movements(bot, mcData)
+                        movements.canDig = false;
+                        movements.scafoldingBlocks = []
+                        bots[botId].pathfinder.setMovements(movements)
+                        goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
+                        bots[botId].pathfinder.setGoal(goal[botId],false)
+                        let newBlocks = bots[botId].findBlocks({
+                            matching: mcData.blocksByName.sugar_cane.id,
+                            maxDistance: 10,
+                            count: 400,
+                        })
+                        let validblocks = getValidBlocks(newBlocks,yLevel)
+                        blocks[botId].push(...validblocks)
+                        blocks[botId] = checkIfAir(bots[botId],blocks[botId])
+                        blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                        while (blocks[botId].length > 500){
+                            blocks[botId].pop()
+                        }
+                        nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
+                        let memoryLength = blocks[botId].length;
+                        console.log(`[ID:${botId}] [BLOCK MEMORY: ${memoryLength}]`)
+                        if (memoryLength < 100 && memoryWarning[botId] === true){
+                            console.log('WARNING MSG')
+                            const embed = {
+                                color: 0xff0000,
+                                title: `[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`,
+                                timestamp: new Date()
+                            };
+                            client.guilds.forEach(async guild => {
+                                guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                            })
+                        } else {
+                            console.log('W FAIL')
+                            memoryWarning[botId] = true
+                        }
+                    }
+                } catch(e) {
+                    console.log('BOOSTED RADIUS')
+                    amplifyCounter[botId] += 5
+                    console.log(`AMPLIFIER: ${amplifyCounter[botId]}`)
+                    blocks[botId] = bots[botId].findBlocks({
+                        matching: mcData.blocksByName.sugar_cane.id,
+                        maxDistance: amplifyCounter[botId],
+                        count: (400 + (amplifyCounter[botId] * 10)),
+                    })
+                    blocks[botId] = getValidBlocks(blocks[botId],yLevel)
+                    blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                    nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
+                }
+            } else {
+                blocks[botId] = bots[botId].findBlocks({
+                    matching: mcData.blocksByName.sugar_cane.id,
+                    maxDistance: 10,
+                    count: 400,
+                })
+                blocks[botId] = getValidBlocks(blocks[botId],yLevel)
+                blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
+                if (blocks[botId].length === 0) {
+                    client.guilds.forEach(async guild => {
+                        guild.channels.cache.find(ch => ch.name === 'krashr').send(`[CANNOT DETECT SUGARCANE]`)
+                    })
+                    farmKillSwitch[botId] = true
+                }
+            }
+        }
+
+        //####
         if (pickUpItems.do && !followPlayer.follow) {
             let itemEntity;
             const itemFilter = (entity) => entity.type === 'object' && entity.objectType === 'Item';
@@ -312,7 +435,6 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell){
                     if (!pickUpItems.destroy){
                         movments.scafoldingBlocks = []
                     }
-
                     bot.pathfinder.setMovements(movments)
                     try{
                         const goal = new GoalFollow(itemEntity, 0)
@@ -359,11 +481,10 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell){
             })
             getItems.then(items => {
                 if (items.length > 34){
-                    client.guilds.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ID:${botId}] [SOLD ALL]`)
-                    })
                     console.log(`[ID:${botId}] [SOLD ALL]`)
                     bots[botId].chat('/sell all')
+                    bots[botId].chat('/pay Krashr404 60000')
+                    bots[botId].chat('/pay Krashr404 60000')
                 }
             })
         }
@@ -374,7 +495,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell){
 function botLoop(){
     let counterB = 0;
     bots.forEach(bot => {
-        onTick(bot,counterB,lookAtPlayer[counterB],followPlayer[counterB],pickUpItems[counterB],autosell[counterB])
+        onTick(bot,counterB,lookAtPlayer[counterB],followPlayer[counterB],pickUpItems[counterB],autosell[counterB],yLevel[counterB])
         counterB += 1
     })
     setTimeout(() => {

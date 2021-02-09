@@ -18,7 +18,7 @@ module.exports = {
                 username: account.username,
                 password: account.password,
                 version: false,
-                });
+            });
             bot.loadPlugin(pathfinder);
             bot.loadPlugin(autoeat)
             bot.once('login', () => {
@@ -39,29 +39,34 @@ module.exports = {
                 message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
             })
             bot.on('spawn', () => {
-                bot.autoEat.options = {
-                    priority: "foodPoints",
-                    startAt: 14,
-                    bannedFood: [],
+                try{
+                    bot.autoEat.options = {
+                        priority: "foodPoints",
+                        startAt: 20,
+                        bannedFood: [],
+                    }
+                    let pos = bot.entity.position;
+                    let coordinates = []
+                    Object.values(pos).forEach(coord => {coordinates.push(Math.round(coord))})
+                    const embed = {
+                        color: 0x8800f9,
+                        title: `[ID:${botId}] [SPAWNED AT COORDINATES]:`,
+                        description:`\`${coordinates}\``,
+                        author: {
+                            name: message.author.username,
+                            icon_url: message.author.avatarURL(),
+                        },
+                        timestamp: new Date(),
+                        footer: {
+                            text: message.guild.name,
+                            icon_url: message.guild.iconURL(),
+                        },
+                    };
+                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                } catch{
+                    message.guild.channels.cache.find(ch => ch.name === 'krashr').send('Error while loading spawn event')
                 }
-                let pos = bot.entity.position;
-                let coordinates = []
-                Object.values(pos).forEach(coord => {coordinates.push(Math.round(coord))})
-                const embed = {
-                    color: 0x8800f9,
-                    title: `[ID:${botId}] [SPAWNED AT COORDINATES]:`,
-                    description:`\`${coordinates}\``,
-                    author: {
-                        name: message.author.username,
-                        icon_url: message.author.avatarURL(),
-                    },
-                    timestamp: new Date(),
-                    footer: {
-                        text: message.guild.name,
-                        icon_url: message.guild.iconURL(),
-                    },
-                };
-                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+
             })
             bot.on("autoeat_started", () => {
                 console.log("Auto Eat started.")
@@ -96,10 +101,26 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                client.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
                 console.log(reason, loggedIn)
             })
-            bot.on('error', err => console.log(err))
+            bot.on('error', (err) => {
+                const embed = {
+                    color: 0xff0000,
+                    title: `[ID:${botId}] [ERROR: COULD NOT LOG IN]`,
+                    author: {
+                        name: message.author.username,
+                        icon_url: message.author.avatarURL(),
+                    },
+                    timestamp: new Date(),
+                    footer: {
+                        text: message.guild.name,
+                        icon_url: message.guild.iconURL(),
+                    },
+                };
+                message.guild.channels.cache.find(ch => ch.name === 'krashr').send({embed: embed})
+                console.log(err)
+            })
             addBot(bot)
         } catch(e){
             console.trace(e)
