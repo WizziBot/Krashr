@@ -498,4 +498,4 @@ function botLoop(){
     },200)
 }
 
-client.login('ODA2OTAzMTA3NTk0MDkyNTU0.YBwNFA.CNrD-BT59yngjDNhivxI233yDm8');
+client.login(krashr.token);
