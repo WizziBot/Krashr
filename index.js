@@ -359,12 +359,16 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell){
             })
             getItems.then(items => {
                 if (items.length > 34){
+                    client.guilds.forEach(guild => {
+                        guild.channels.cache.find(ch => ch.name === 'krashr').send(`[ID:${botId}] [SOLD ALL]`)
+                    })
+                    console.log(`[ID:${botId}] [SOLD ALL]`)
                     bots[botId].chat('/sell all')
                 }
             })
         }
     } catch(e){
-        console.trace(e);
+        //
     }
 }
 function botLoop(){
