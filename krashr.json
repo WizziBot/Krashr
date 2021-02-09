@@ -6,9 +6,5 @@
         },
     ],
     "commandChannel": "krashr",
-    "prefix": "-",
-    "proxy" : {
-        "ip":"91.226.5.245",
-        "port":"36604"
-    }
+    "prefix": "-"
 }
