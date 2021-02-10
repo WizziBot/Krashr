@@ -359,7 +359,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 bot.lookAt(pos)
             }
         }
-        //## sugarcane farming algoritm VERSION 2.8.4 (iterative)
+        //## sugarcane farming algoritm VERSION 2.8.5 (iterative)
         if (!farmKillSwitch[botId]) {
             let shiftblock = blocks[botId].shift()
             nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
@@ -398,6 +398,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         })
                         let validblocks = getValidBlocks(newBlocks,yLevel)
                         blocks[botId].push(...validblocks)
+                        blocks[botId].push(shiftblock)
                         blocks[botId] = checkIfAir(bots[botId],blocks[botId])
                         blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
                         while (blocks[botId].length > 500){
@@ -561,28 +562,33 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
             nearbyPlayers.forEach(playerKey => {
                 let player = nearbyPlayersData[playerKey]
                 if(player.entity && !alertWhitelist.includes(player.username)){
-                    if(calcDistance(bots[botId].entity.position,player.entity.position) < intrusionAlert.range){
-                        let currTime = new Date();
-                        let coordinates = []
-                        Object.values(player.entity.position).forEach(coord => {coordinates.push(Math.round(coord))})
-                        console.log(`[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username}) AT] : ${coordinates} : ${currTime}`)
-                        let alertEmbed = {
-                            color: 0xffff00,
-                            title: `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username})] : ${coordinates}`,
-                            timestamp: new Date()
-                        };
-                        client.guilds.cache.forEach(guild => {
-                            try{
-                                guild.channels.cache.find(ch => ch.name === alertsChannel).send('<@&808051486562058290>')
-                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
-                            } catch{
-                                //ignore
-                            }
-                        })
-                        intrusionAlert.delay = false;
-                        setTimeout(async () => {
-                            intrusionAlert.delay = true;
-                        },5000)
+                    try{
+                        if(calcDistance(bots[botId].entity.position,player.entity.position) < intrusionAlert.range){
+                            let currTime = new Date();
+                            let coordinates = []
+                            Object.values(player.entity.position).forEach(coord => {coordinates.push(Math.round(coord))})
+                            console.log(`[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username}) AT] : ${coordinates} : ${currTime}`)
+                            let alertEmbed = {
+                                color: 0xffff00,
+                                title: `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username})] : ${coordinates}`,
+                                timestamp: new Date()
+                            };
+                            client.guilds.cache.forEach(guild => {
+                                try{
+                                    guild.channels.cache.find(ch => ch.name === alertsChannel).send('<@&808051486562058290>')
+                                    guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                                } catch{
+                                    //ignore
+                                }
+                            })
+                            intrusionAlert.delay = false;
+                            setTimeout(async () => {
+                                intrusionAlert.delay = true;
+                            },5000)
+                        }
+                    } catch(e){
+                        console.trace(e)
+                        console.log(player)
                     }
                 }
             })
