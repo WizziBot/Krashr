@@ -29,7 +29,8 @@ let memoryWarning = [];
 let amplifyCounter = [];
 let intrusionAlert = {
     range: null,
-    do: false
+    do: false,
+    delay: true,
 };
 let reboot = false;
 function appendNewData(){
@@ -42,7 +43,7 @@ function appendNewData(){
     blocks.push(null)
     nearBlocks.push(null)
     goal.push(null)
-    memoryWarning.push(false)
+    memoryWarning.push(true)
     amplifyCounter.push(10)
     pickUpItems.push({
         item:null,
@@ -378,19 +379,20 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         }
                         nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
                         let memoryLength = blocks[botId].length;
-                        //console.log(`[ID:${botId}] [BLOCK MEMORY: ${memoryLength}]`)
                         if (memoryLength < 100 && memoryWarning[botId] === true){
                             console.log(`[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
                             let alertEmbed = {
-                                color: 0xff0000,
+                                color: 0x0000ff,
                                 title: `[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`,
                                 timestamp: new Date()
                             };
-                            Object.values(client.guilds).forEach(guild => {
-                                client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                            client.guilds.cache.forEach(guild => {
+                                guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
                             })
-                        } else {
-                            memoryWarning[botId] = true
+                            memoryWarning[botId] = false
+                            setTimeout(async () => {
+                                memoryWarning[botId] = true
+                            },5000)
                         }
                     }
                 } catch(e) {
@@ -403,8 +405,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                             title: `[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING]`,
                             timestamp: new Date()
                         };
-                        Object.values(client.guilds).forEach(guild => {
-                            client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                        client.guilds.cache.forEach(guild => {
+                            guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
                         })
                         farmKillSwitch[botId] = true
                     } else {
@@ -430,8 +432,13 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
                 nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
                 if (blocks[botId].length === 0) {
-                    Object.values(client.guilds).forEach(guild => {
-                        client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send(`[ID:${botId}] [CANNOT DETECT SUGARCANE] [TERMINATING FARMING]`)
+                    let alertEmbed = {
+                        color: 0xff0000,
+                        title: `[ID:${botId}] [CANNOT DETECT SUGARCANE] [TERMINATING FARMING]`,
+                        timestamp: new Date()
+                    };
+                    client.guilds.cache.forEach(guild => {
+                        guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
                     })
                     farmKillSwitch[botId] = true
                 }
@@ -480,8 +487,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         title: `[UNABLE TO DETECT PLAYER]`,
                         timestamp: new Date()
                     };
-                    Object.values(client.guilds).forEach(guild => {
-                        client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                    client.guilds.cache.forEach(guild => {
+                        guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
                     })
                     killSwitch(botId)
                 }
@@ -492,8 +499,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     title: `[UNABLE TO DETECT PLAYER]`,
                     timestamp: new Date()
                 };
-                Object.values(client.guilds).forEach(guild => {
-                    client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                client.guilds.cache.forEach(guild => {
+                    guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
                 })
                 killSwitch(botId)
             }
@@ -515,7 +522,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 }
             })
         }
-        if (intrusionAlert.do){
+        if (intrusionAlert.do && intrusionAlert.delay){
             let nearbyPlayersData = bot.players;
             let nearbyPlayers = Object.keys(nearbyPlayersData);
             nearbyPlayers.forEach(playerKey => {
@@ -529,13 +536,18 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     let alertMsg = `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username}) AT] : ${coordinates}`
                     console.log(alertMsg + `AT : ${currTime}`)
                     let alertEmbed = {
-                        color: 0x100000,
+                        color: 0x150000,
                         title: `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username})] : ${coordinates}`,
                         timestamp: new Date()
                     };
-                    Object.values(client.guilds).forEach(guild => {
-                        client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                    client.guilds.cache.forEach(guild => {
+                        guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                        guild.channels.cache.find(ch => ch.name === commandChannel).send('@everyone')
                     })
+                    intrusionAlert.delay = false;
+                    setTimeout(async () => {
+                        intrusionAlert.delay = true;
+                    },5000)
                 }
             })
         }
