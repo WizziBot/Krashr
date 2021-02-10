@@ -10,7 +10,8 @@
         }
     ],
     "commandChannel": "krashr2",
+    "alertsChannel": "krashr-alerts",
     "prefix": "~",
-    "token":"ODA4ODUxMTc4NjE1OTk2NDQ5.YCMjXA.8gSSulJWaJICAl-n5wSZi-_PSfk",
-    "autoPayTarget":"bruh1337"
+    "token":"ODA2OTAzMTA3NTk0MDkyNTU0.YBwNFA.CNrD-BT59yngjDNhivxI233yDm8",
+    "autoPayTarget":"Krashr404"
 }
