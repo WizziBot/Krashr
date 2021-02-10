@@ -369,9 +369,9 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         }
                         nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
                         let memoryLength = blocks[botId].length;
-                        console.log(`[ID:${botId}] [BLOCK MEMORY: ${memoryLength}]`)
+                        //console.log(`[ID:${botId}] [BLOCK MEMORY: ${memoryLength}]`)
                         if (memoryLength < 100 && memoryWarning[botId] === true){
-                            console.log('WARNING MSG')
+                            console.log(`[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
                             const embed = {
                                 color: 0xff0000,
                                 title: `[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`,
@@ -381,7 +381,6 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                                 guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
                             })
                         } else {
-                            console.log('W FAIL')
                             memoryWarning[botId] = true
                         }
                     }
@@ -389,7 +388,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     console.trace(e)
                     console.log('BOOSTED RADIUS')
                     amplifyCounter[botId] += 5
-                    console.log(`AMPLIFIER: ${amplifyCounter[botId]}`)
+                    console.log(`[ID:${botId}] AMPLIFIER: ${amplifyCounter[botId]}`)
                     blocks[botId] = bots[botId].findBlocks({
                         matching: mcData.blocksByName.sugar_cane.id,
                         maxDistance: amplifyCounter[botId],
@@ -478,8 +477,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 if (items.length > 34){
                     console.log(`[ID:${botId}] [SOLD ALL]`)
                     bots[botId].chat('/sell all')
-                    bots[botId].chat('/pay Krashr404 60000')
-                    bots[botId].chat('/pay Krashr404 60000')
+                    bots[botId].chat(`/pay ${krashr.autoPayTarget} 60000`)
+                    bots[botId].chat(`/pay ${krashr.autoPayTarget} 60000`)
                 }
             })
         }
