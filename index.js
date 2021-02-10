@@ -267,9 +267,17 @@ function startFarmLoop(botId,y){
     nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
     nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
     nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
+    const availableTools = bots[botId].inventory.items()
+    for (const tool of availableTools) {
+      if (tool.name === 'diamond_hoe') {
+        bots[botId].equip(tool, 'hand')
+        break
+      }
+    }
+
     farmKillSwitch[botId] = false;
     } catch(e){
-        
+        console.trace(e)
     }
 }
 const getData = require('minecraft-data');
@@ -387,7 +395,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                                 timestamp: new Date()
                             };
                             client.guilds.cache.forEach(guild => {
-                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                                try {
+                                    guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                                } catch {
+                                    //ignore
+                                }
                             })
                             memoryWarning[botId] = false
                             setTimeout(() => {
@@ -406,7 +418,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                             timestamp: new Date()
                         };
                         client.guilds.cache.forEach(guild => {
-                            guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                            try {
+                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                            } catch {
+                                //ignore
+                            }
                         })
                         farmKillSwitch[botId] = true
                     } else {
@@ -536,8 +552,18 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
-                        guild.channels.cache.find(ch => ch.name === alertsChannell).send('<@&808051486562058290>')
+                        try{
+                            guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                        } catch{
+                            //ignore
+                        }
+                    })
+                    client.guilds.cache.forEach(guild => {
+                        try{
+                            guild.channels.cache.find(ch => ch.name === alertsChannell).send('<@&808051486562058290>')
+                        } catch {
+                            //ignore
+                        }
                     })
                     intrusionAlert.delay = false;
                     setTimeout(async () => {
