@@ -1,30 +1,13 @@
 module.exports = {
-    name: 'togglechat',
-    description: "Toggles the minecraft chat",
-    execute(message,botId,chatOn,krashr){
+    name: 'blacklistAlert',
+    description: "Toggles all bots to detect blacklisted players online",
+    execute(message,blacklistAlert,krashr){
         try{
-            if(chatOn === false){
-                chatOn = true;
-                const embed = {
-                    color: 0x00ff00,
-                    title: `[ID:${botId}] [MINECRAFT CHAT] : [ON]`,
-                    author: {
-                        name: message.author.username,
-                        icon_url: message.author.avatarURL(),
-                    },
-                    timestamp: new Date(),
-                    footer: {
-                        text: message.guild.name,
-                        icon_url: message.guild.iconURL(),
-                    },
-                };
-                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
-                console.log(`[ID:${botId}] [MINECRAFT CHAT] : [ON]`)
-            } else if(chatOn === true){
-                chatOn = false;
+            if(blacklistAlert.do === true){
+                blacklistAlert.do = false;
                 const embed = {
                     color: 0xff0000,
-                    title: `[ID:${botId}] [MINECRAFT CHAT] : [OFF]`,
+                    title: `[ID:ALL] [BLACKLIST DETECTION] : [OFF]`,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),
@@ -36,12 +19,29 @@ module.exports = {
                     },
                 };
                 message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
-                console.log(`[ID:${botId}] [MINECRAFT CHAT] : [OFF]`)
+                console.log(`[ID:ALL] [BLACKLIST DETECTION] : [OFF]`)
+            } else if(blacklistAlert.do === false){
+                blacklistAlert.do = true;
+                const embed = {
+                    color: 0x00ff00,
+                    title: `[ID:ALL] [BLACKLIST DETECTION] : [ON]`,
+                    author: {
+                        name: message.author.username,
+                        icon_url: message.author.avatarURL(),
+                    },
+                    timestamp: new Date(),
+                    footer: {
+                        text: message.guild.name,
+                        icon_url: message.guild.iconURL(),
+                    },
+                };
+                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                console.log(`[ID:ALL] [BLACKLIST DETECTION] : [ON]`)
             }
-            return chatOn;
+            return blacklistAlert;
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[UNKNOWN ERROR]`)
+            message.channel.send(`[ERROR] Try using a valid syntax \`-blacklistAlert [maxrange/off]\``)
         }
     }
 }

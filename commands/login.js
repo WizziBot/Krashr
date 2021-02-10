@@ -5,6 +5,8 @@ module.exports = {
         try{
             const { pathfinder } = require('mineflayer-pathfinder');
             const autoeat = require("mineflayer-auto-eat");
+            const commandChannel = krashr.commandChannel
+            const alertsChannel = krashr.alertsChannel
             //MINECRAFT BOT
             const splitArgs = commandArgs.split(' ');
             const serverIp = splitArgs.shift();
@@ -19,12 +21,6 @@ module.exports = {
                 password: account.password,
                 version: false,
             });
-            bot.on('connect', function (spawn) {
-                console.log("Logged in")
-            });
-            bot.on('end', packet => {
-                console.log("Connection ended abruptly")
-            })
             bot.loadPlugin(pathfinder);
             bot.loadPlugin(autoeat)
             bot.once('login', () => {
@@ -42,7 +38,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
             })
             bot.on('spawn', () => {
                 try{
@@ -68,9 +64,9 @@ module.exports = {
                             icon_url: message.guild.iconURL(),
                         },
                     };
-                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                    message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
                 } catch{
-                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send('Error while loading spawn event')
+                    message.guild.channels.cache.find(ch => ch.name === commandChannel).send('Error while loading spawn event')
                 }
 
             })
@@ -96,7 +92,8 @@ module.exports = {
             bot.on('kicked', (reason, loggedIn) => {
                 const embed = {
                     color: 0xff0000,
-                    title: `[ID:${botId}] [KICKED]`,
+                    title: `[ID:${botId}] [KICKED] REASON:`,
+                    description: reason,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),
@@ -107,13 +104,14 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: embed})
                 console.log(reason, loggedIn)
             })
             bot.on('error', (err) => {
                 const embed = {
                     color: 0xff0000,
                     title: `[ID:${botId}] [ERROR: COULD NOT LOG IN]`,
+                    description: err,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),
@@ -124,13 +122,13 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: embed})
                 console.log(err)
             })
             addBot(bot)
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[ERROR] Try using the correct syntax: \`-login serverIp port\``)
+            message.guild.channels.cache.find(ch => ch.name === commandChannel).send(`[ERROR] Try using the correct syntax: \`-login serverIp port\``)
         }
     }
 }
