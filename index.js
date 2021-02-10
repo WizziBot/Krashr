@@ -359,7 +359,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 bot.lookAt(pos)
             }
         }
-        //## sugarcane farming algoritm VERSION 2.8.5 (iterative)
+        //## sugarcane farming algoritm VERSION 2.9.1 (iterative)
         if (!farmKillSwitch[botId]) {
             let shiftblock = blocks[botId].shift()
             nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
