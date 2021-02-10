@@ -121,7 +121,7 @@ for(const file of commandFiles){
 client.once('ready', () => {
     let onlineEmbed = {
         color: 0x00ff00,
-        title: `\u2705 [KRASHR IS ONLINE]`,
+        title: `\u2705 [${client.user.username.toUpperCase()} IS ONLINE]`,
         timestamp: new Date()
     };
     client.guilds.cache.forEach(guild => {
