@@ -1,7 +1,7 @@
 module.exports = {
     name: 'cancelFollowPlayer',
     description: "Stops following the player",
-    execute(message,followPlayer,bot,botId,krashr){
+    execute(message,followPlayer,botId,krashr){
         try{
             if(followPlayer.follow === true){
                 console.log(`[ID:${botId}] [FOLLOW PLAYER (${followPlayer.player})] : [OFF]`)
