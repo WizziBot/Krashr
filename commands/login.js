@@ -19,12 +19,6 @@ module.exports = {
                 password: account.password,
                 version: false,
             });
-            bot.on('connect', function (spawn) {
-                console.log("Logged in")
-            });
-            bot.on('end', packet => {
-                console.log("Connection ended abruptly")
-            })
             bot.loadPlugin(pathfinder);
             bot.loadPlugin(autoeat)
             bot.once('login', () => {
@@ -96,7 +90,8 @@ module.exports = {
             bot.on('kicked', (reason, loggedIn) => {
                 const embed = {
                     color: 0xff0000,
-                    title: `[ID:${botId}] [KICKED]`,
+                    title: `[ID:${botId}] [KICKED] REASON:`,
+                    description: reason,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),
@@ -107,13 +102,14 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.alertChannel).send({embed: embed})
                 console.log(reason, loggedIn)
             })
             bot.on('error', (err) => {
                 const embed = {
                     color: 0xff0000,
                     title: `[ID:${botId}] [ERROR: COULD NOT LOG IN]`,
+                    description: err,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),
@@ -124,7 +120,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === krashr.alertChannel).send({embed: embed})
                 console.log(err)
             })
             addBot(bot)

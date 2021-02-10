@@ -14,6 +14,7 @@
         }
     ],
     "commandChannel": "krashr",
+    "alertsChannel": "krashr-alerts",
     "prefix": "-",
     "token":"ODA2OTAzMTA3NTk0MDkyNTU0.YBwNFA.CNrD-BT59yngjDNhivxI233yDm8",
     "autoPayTarget":"Krashr404"

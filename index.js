@@ -113,8 +113,17 @@ for(const file of commandFiles){
 }
 
 client.once('ready', () => {
-    client.guilds.cache.forEach(guild =>{
-        guild.channels.cache.find(ch => ch.name === commandChannel).send('[ONLINE]')
+    let onlineEmbed = {
+        color: 0x00ff00,
+        title: `\u2705 [KRASHR IS ONLINE]`,
+        timestamp: new Date()
+    };
+    client.guilds.cache.forEach(guild => {
+        try{
+            guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed:onlineEmbed})
+        } catch {
+            //ignore
+        }
     })
     console.log(`DISCORD : [KRASHR IS ONLINE]`);
     botLoop()
@@ -126,7 +135,7 @@ client.on('message',async message => {
         if(message.guild === null) return;
         if(!message.content.startsWith(PREFIX) || message.author.bot) return;
         if(!message.member.roles.cache.find(role => role.name === "Krashr Mod") && message.member.id !== '372325472811352065') return
-        if(message.channel.name !== krashr.commandChannel && message.channel.name !== "krashr-chat-logger") return;
+        if(message.channel.name !== krashr.commandChannel) return;
         const preargs = message.content.slice((PREFIX.length)).trim().split(' ');
         const args = preargs.filter(function (el) {
             return el != '';
@@ -154,14 +163,14 @@ client.on('message',async message => {
         if (!bots[botId]) return;
 
         if(command === 'togglechat'){
-            chatOn[botId] = client.commands.get('togglechat').execute(message,botId,chatOn,krashr)
+            chatOn[botId] = client.commands.get('togglechat').execute(message,botId,chatOn[botId],krashr)
         } else if (command === 'intrusionalert'){
             console.log('got')
             intrusionAlert = client.commands.get('intrusionAlert').execute(message,intrusionAlert,commandArgs,krashr)
         } else if (command === 'inventory'){
             client.commands.get('inventory').execute(message,bots[botId],botId,commandArgs,krashr);
         } else if (command === 'cs'){
-            client.commands.get('connectSequence').execute(message,commandArgs,bots[botId],krashr);
+            //client.commands.get('connectSequence').execute(message,commandArgs,bots[botId],krashr);
         } else if (command === 'chat'){
             bots[botId].chat(commandArgs);
         } else if (command === 'lap'){
@@ -177,7 +186,7 @@ client.on('message',async message => {
         } else if (command === 'coordinates'){
             client.commands.get('coordinates').execute(message,bots[botId],krashr);
         } else if (command === 't'){
-            //
+            //testcommand
         } else if (command === 'pickupitems'){
             pickUpItems[botId] = client.commands.get('pickUpItems').execute(message,pickUpItems[botId],commandArgs,botId,krashr)
         } else if (command === 'sugarcane'){
@@ -387,7 +396,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                                 timestamp: new Date()
                             };
                             client.guilds.cache.forEach(guild => {
-                                guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                                guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
                             })
                             memoryWarning[botId] = false
                             setTimeout(async () => {
@@ -406,7 +415,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                             timestamp: new Date()
                         };
                         client.guilds.cache.forEach(guild => {
-                            guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                            guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
                         })
                         farmKillSwitch[botId] = true
                     } else {
@@ -438,7 +447,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                        guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
                     })
                     farmKillSwitch[botId] = true
                 }
@@ -484,11 +493,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     console.log('Unable to detect player')
                     let alertEmbed = {
                         color: 0xff0000,
-                        title: `[UNABLE TO DETECT PLAYER]`,
+                        title: `[ID:${botId}] [UNABLE TO DETECT PLAYER]`,
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                        guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
                     })
                     killSwitch(botId)
                 }
@@ -496,31 +505,26 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 console.log('Unable to detect player')
                 let alertEmbed = {
                     color: 0xff0000,
-                    title: `[UNABLE TO DETECT PLAYER]`,
+                    title: `[ID:${botId}] [UNABLE TO DETECT PLAYER]`,
                     timestamp: new Date()
                 };
                 client.guilds.cache.forEach(guild => {
-                    guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                    guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
                 })
                 killSwitch(botId)
             }
         }
         if (autosell){
-            let getItems = new Promise((resolve,reject) =>{
-                let temp = [];
-                bots[botId].inventory.items().forEach(item => {
-                    temp.push(item)
-                })
-                resolve(temp)
+            let getItems = [];
+            bots[botId].inventory.items().forEach(item => {
+                getItems.push(item)
             })
-            getItems.then(items => {
-                if (items.length > 34){
-                    console.log(`[ID:${botId}] [SOLD ALL]`)
-                    bots[botId].chat('/sell all')
-                    bots[botId].chat(`/pay ${krashr.autoPayTarget} 60000`)
-                    bots[botId].chat(`/pay ${krashr.autoPayTarget} 60000`)
-                }
-            })
+            if (getItems.length > 34){
+                console.log(`[ID:${botId}] [SOLD ALL]`)
+                bots[botId].chat('/sell all')
+                bots[botId].chat(`/pay ${krashr.autoPayTarget} 60000`)
+                bots[botId].chat(`/pay ${krashr.autoPayTarget} 60000`)
+            }
         }
         if (intrusionAlert.do && intrusionAlert.delay){
             let nearbyPlayersData = bot.players;
@@ -541,8 +545,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
-                        guild.channels.cache.find(ch => ch.name === commandChannel).send('@everyone')
+                        guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
+                        guild.channels.cache.find(ch => ch.name === krashr.alertsChannell).send('<@&808051486562058290>')
                     })
                     intrusionAlert.delay = false;
                     setTimeout(async () => {

@@ -4,6 +4,10 @@ module.exports = {
     execute(message,intrusionAlert,commandArgs,krashr){
         try{
             const range = commandArgs
+            if (!range){
+                message.channel.send(`[ERROR] Try using a valid syntax \`-intrusionalert [maxrange/off]\``)
+                return
+            }
             if(intrusionAlert.do === true && range === 'off'){
                 intrusionAlert.do = false;
                 intrusionAlert.range = null;
@@ -44,7 +48,7 @@ module.exports = {
             return intrusionAlert;
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[UNKNOWN ERROR]`)
+            message.channel.send(`[ERROR] Try using a valid syntax \`-intrusionalert [maxrange/off]\``)
         }
     }
 }
