@@ -7,7 +7,8 @@ const mineflayer = require('mineflayer');
 const { Movements, goals } = require('mineflayer-pathfinder');
 const GoalFollow = goals.GoalFollow;
 const GoalBlock = goals.GoalBlock;
-const alertWhitelist = require('./whitelist.json')
+const alertWhitelist = require('./whitelist.json');
+const blacklist = require('./blacklist.json');
 const krashr = require('./krashr.json');
 const accounts = krashr.accounts;
 const commandChannel = krashr.commandChannel
@@ -30,6 +31,10 @@ let memoryWarning = [];
 let amplifyCounter = [];
 let intrusionAlert = {
     range: null,
+    do: false,
+    delay: true,
+};
+let blacklistAlert = {
     do: false,
     delay: true,
 };
@@ -166,8 +171,9 @@ client.on('message',async message => {
         if(command === 'togglechat'){
             chatOn[botId] = client.commands.get('togglechat').execute(message,botId,chatOn[botId],krashr)
         } else if (command === 'intrusionalert'){
-            console.log('got')
             intrusionAlert = client.commands.get('intrusionAlert').execute(message,intrusionAlert,commandArgs,krashr)
+        } else if (command === 'blacklistalert'){
+            blacklistAlert = client.commands.get('blacklistAlert').execute(message,blacklistAlert,commandArgs,krashr)
         } else if (command === 'inventory'){
             client.commands.get('inventory').execute(message,bots[botId],botId,commandArgs,krashr);
         } else if (command === 'cs'){
@@ -227,9 +233,23 @@ client.on('message',async message => {
             blocks = [];
             nearBlocks = [];
             goal = [];
+            memoryWarning = [];
+            amplifyCounter = [];
+            intrusionAlert = {
+                range: null,
+                do: false,
+                delay: true,
+            };
+            blacklistAlert = {
+                do: false,
+                delay: true,
+            };
         } else if (command === 'updatewhitelist'){
             alertWhitelist = require('./whitelist.json')
             message.guild.channels.cache.find(ch => ch.name === commandChannel).send(JSON.stringify(alertWhitelist))
+        } else if (command === 'updateblacklist'){
+            blacklist = require('./blacklist.json')
+            message.guild.channels.cache.find(ch => ch.name === commandChannel).send(JSON.stringify(blacklist))
         }
     } catch(e) {
         console.trace(e)
@@ -454,7 +474,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                        try{
+                            guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                        } catch {
+                            //ignore
+                        }
                     })
                     farmKillSwitch[botId] = true
                 }
@@ -572,6 +596,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 }
             })
         }
+
     } catch(e){
         console.trace(e)
         console.log('ON TICK ERROR')
