@@ -19,7 +19,7 @@ module.exports = {
                     },
                 };
                 message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
-                console.log('[ID:0] [MINECRAFT CHAT] : [ON]')
+                console.log(`[ID:${botId}] [MINECRAFT CHAT] : [ON]`)
             } else if(chatOn === true){
                 chatOn = false;
                 const embed = {
@@ -36,7 +36,7 @@ module.exports = {
                     },
                 };
                 message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
-                console.log('[ID:0] [MINECRAFT CHAT] : [OFF]')
+                console.log(`[ID:${botId}] [MINECRAFT CHAT] : [OFF]`)
             }
             return chatOn;
         } catch(e){

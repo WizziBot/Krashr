@@ -4,11 +4,10 @@ const delay = require('delay');
 const fs = require('fs');
 client.commands = new Discord.Collection();
 const mineflayer = require('mineflayer');
-const mineflayerViewer = require('prismarine-viewer').mineflayer;
 const { Movements, goals } = require('mineflayer-pathfinder');
 const GoalFollow = goals.GoalFollow;
 const GoalBlock = goals.GoalBlock;
-
+const alertWhitelist = require('./whitelist.json')
 const krashr = require('./krashr.json');
 const accounts = krashr.accounts;
 const commandChannel = krashr.commandChannel
@@ -28,6 +27,11 @@ let nearBlocks = [];
 let goal = [];
 let memoryWarning = [];
 let amplifyCounter = [];
+let intrusionAlert = {
+    range: null,
+    do: false
+};
+let reboot = false;
 function appendNewData(){
     chatOn.push(false);
     lookAtPlayer.push(false);
@@ -150,6 +154,9 @@ client.on('message',async message => {
 
         if(command === 'togglechat'){
             chatOn[botId] = client.commands.get('togglechat').execute(message,botId,chatOn,krashr)
+        } else if (command === 'intrusionalert'){
+            console.log('got')
+            intrusionAlert = client.commands.get('intrusionAlert').execute(message,intrusionAlert,commandArgs,krashr)
         } else if (command === 'inventory'){
             client.commands.get('inventory').execute(message,bots[botId],botId,commandArgs,krashr);
         } else if (command === 'cs'){
@@ -288,8 +295,9 @@ function checkIfAir(bot,nearbyBlocks){
             }
         })
         return tempNearBlocks
-    } catch(e){
+    } catch(e) {
         console.trace(e)
+        console.log('CHECKIFAIR')
     }
 }
 function qSort(blocksPos,botPos){
@@ -310,6 +318,7 @@ function qSort(blocksPos,botPos){
         return [...qSort(left,botPos), pivot, ...qSort(right,botPos)]
     } catch(e) {
         console.trace(e)
+        console.log('QSORT')
     }
 }
 function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel){
@@ -372,13 +381,13 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         //console.log(`[ID:${botId}] [BLOCK MEMORY: ${memoryLength}]`)
                         if (memoryLength < 100 && memoryWarning[botId] === true){
                             console.log(`[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
-                            const embed = {
+                            let alertEmbed = {
                                 color: 0xff0000,
                                 title: `[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`,
                                 timestamp: new Date()
                             };
-                            client.guilds.forEach(async guild => {
-                                guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
+                            Object.values(client.guilds).forEach(guild => {
+                                client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
                             })
                         } else {
                             memoryWarning[botId] = true
@@ -386,17 +395,30 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     }
                 } catch(e) {
                     console.trace(e)
-                    console.log('BOOSTED RADIUS')
                     amplifyCounter[botId] += 5
-                    console.log(`[ID:${botId}] AMPLIFIER: ${amplifyCounter[botId]}`)
-                    blocks[botId] = bots[botId].findBlocks({
-                        matching: mcData.blocksByName.sugar_cane.id,
-                        maxDistance: amplifyCounter[botId],
-                        count: (400 + (amplifyCounter[botId] * 10)),
-                    })
-                    blocks[botId] = getValidBlocks(blocks[botId],yLevel)
-                    blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
-                    nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
+                    if (amplifyCounter > 100) {
+                        console.log(`[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED]`)
+                        let alertEmbed = {
+                            color: 0xff0000,
+                            title: `[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING]`,
+                            timestamp: new Date()
+                        };
+                        Object.values(client.guilds).forEach(guild => {
+                            client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                        })
+                        farmKillSwitch[botId] = true
+                    } else {
+                        let currTime = new Date();
+                        console.log(`[ID:${botId}] AMPLIFIER: ${amplifyCounter[botId]} AT:${currTime}`)
+                        blocks[botId] = bots[botId].findBlocks({
+                            matching: mcData.blocksByName.sugar_cane.id,
+                            maxDistance: amplifyCounter[botId],
+                            count: (400 + (amplifyCounter[botId] ** 2)),
+                        })
+                        blocks[botId] = getValidBlocks(blocks[botId],yLevel)
+                        blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                        nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
+                    }
                 }
             } else {
                 blocks[botId] = bots[botId].findBlocks({
@@ -408,8 +430,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
                 nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
                 if (blocks[botId].length === 0) {
-                    client.guilds.forEach(async guild => {
-                        guild.channels.cache.find(ch => ch.name === commandChannel).send(`[CANNOT DETECT SUGARCANE]`)
+                    Object.values(client.guilds).forEach(guild => {
+                        client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send(`[ID:${botId}] [CANNOT DETECT SUGARCANE] [TERMINATING FARMING]`)
                     })
                     farmKillSwitch[botId] = true
                 }
@@ -453,19 +475,30 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     bot.pathfinder.setGoal(goal,false)
                 } catch {
                     console.log('Unable to detect player')
-                    client.guilds.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === commandChannel).send(`[UNABLE TO DETECT PLAYER]`)
+                    let alertEmbed = {
+                        color: 0xff0000,
+                        title: `[UNABLE TO DETECT PLAYER]`,
+                        timestamp: new Date()
+                    };
+                    Object.values(client.guilds).forEach(guild => {
+                        client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
                     })
                     killSwitch(botId)
                 }
             } else {
                 console.log('Unable to detect player')
-                client.guilds.forEach(guild => {
-                    guild.channels.cache.find(ch => ch.name === commandChannel).send(`[UNABLE TO DETECT PLAYER]`)
+                let alertEmbed = {
+                    color: 0xff0000,
+                    title: `[UNABLE TO DETECT PLAYER]`,
+                    timestamp: new Date()
+                };
+                Object.values(client.guilds).forEach(guild => {
+                    client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
                 })
                 killSwitch(botId)
             }
-        } if (autosell){
+        }
+        if (autosell){
             let getItems = new Promise((resolve,reject) =>{
                 let temp = [];
                 bots[botId].inventory.items().forEach(item => {
@@ -482,19 +515,67 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 }
             })
         }
+        if (intrusionAlert.do){
+            let nearbyPlayersData = bot.players;
+            let nearbyPlayers = Object.keys(nearbyPlayersData);
+            nearbyPlayers.forEach(playerKey => {
+                let player = nearbyPlayersData[playerKey]
+                if(!player.entity) return;
+                if(alertWhitelist.includes(player.username)) return
+                if(calcDistance(bots[botId].entity.position,player.entity.position) < intrusionAlert.range){
+                    let currTime = new Date();
+                    let coordinates = []
+                    Object.values(player.entity.position).forEach(coord => {coordinates.push(Math.round(coord))})
+                    let alertMsg = `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username}) AT] : ${coordinates}`
+                    console.log(alertMsg + `AT : ${currTime}`)
+                    let alertEmbed = {
+                        color: 0x100000,
+                        title: `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username})] : ${coordinates}`,
+                        timestamp: new Date()
+                    };
+                    Object.values(client.guilds).forEach(guild => {
+                        client.guilds[guild].channels.cache.find(ch => ch.name === commandChannel).send({embed: alertEmbed})
+                    })
+                }
+            })
+        }
     } catch(e){
-        //
+        console.trace(e)
+        console.log('ON TICK ERROR')
+        let currTime = new Date();
+        if (typeof e == TypeError){
+            console.log(`[REBOOT DETECTED] AT: ${currTime}`)
+            reboot = true
+        }
     }
 }
 function botLoop(){
+    try{
     let counterB = 0;
     bots.forEach(bot => {
         onTick(bot,counterB,lookAtPlayer[counterB],followPlayer[counterB],pickUpItems[counterB],autosell[counterB],yLevel[counterB])
         counterB += 1
     })
-    setTimeout(() => {
-        botLoop()
-    },200)
+    if (!reboot){
+        setTimeout(() => {
+            botLoop()
+        },200)
+    } else {
+        console.log('[RECONNECTING]')
+        setTimeout(() => {
+            console.log('[JOINING FACTIONS]')
+            bots.forEach(bot => {
+                bot.chat(`/factions`)
+            })
+            setTimeout(() => {
+                botLoop()
+            },5000)
+        },5000)
+    }
+    } catch(e) {
+        console.trace(e)
+        console.log('MAINLOOP')
+    }
 }
 
 client.login(krashr.token);
