@@ -1,12 +1,16 @@
 {
     "accounts" : [
         {
-            "username":"",
-            "password":""
+            "username":"shackledramen@gmail.com",
+            "password":"Keroroboss174501!"
+        },
+        {
+            "username":"shepsims@gmail.com",
+            "password":"Q3q4pow5!"
         }
     ],
-    "commandChannel": "krashr",
-    "prefix": "-",
-    "token":"",
-    "autoPayTarget":"Krashr404"
+    "commandChannel": "krashr2",
+    "prefix": "~",
+    "token":"ODA4ODUxMTc4NjE1OTk2NDQ5.YCMjXA.8gSSulJWaJICAl-n5wSZi-_PSfk",
+    "autoPayTarget":"bruh1337"
 }
