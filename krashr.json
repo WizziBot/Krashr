@@ -1,20 +1,12 @@
 {
     "accounts" : [
         {
-            "username":"ywsloot@home.nl",
-            "password":"POLOmast15!"
-        },
-        {
-            "username":"Anderson.Banh7@gmail.com",
-            "password":"Technoblode"
-        },
-        {
-            "username":"mattrodriguez2000@gmail.com",
-            "password":"Monok...7"
+            "username":"",
+            "password":""
         }
     ],
     "commandChannel": "krashr",
     "prefix": "-",
-    "token":"ODA2OTAzMTA3NTk0MDkyNTU0.YBwNFA.CNrD-BT59yngjDNhivxI233yDm8",
+    "token":"",
     "autoPayTarget":"Krashr404"
 }
