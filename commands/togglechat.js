@@ -1,13 +1,13 @@
 module.exports = {
     name: 'togglechat',
     description: "Toggles the minecraft chat",
-    execute(message,chatOn,krashr){
+    execute(message,botId,chatOn,krashr){
         try{
             if(chatOn === false){
                 chatOn = true;
                 const embed = {
                     color: 0x00ff00,
-                    title: `[ID:0] [MINECRAFT CHAT] : [ON]`,
+                    title: `[ID:${botId}] [MINECRAFT CHAT] : [ON]`,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),
@@ -24,7 +24,7 @@ module.exports = {
                 chatOn = false;
                 const embed = {
                     color: 0xff0000,
-                    title: `[ID:0] [MINECRAFT CHAT] : [OFF]`,
+                    title: `[ID:${botId}] [MINECRAFT CHAT] : [OFF]`,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),

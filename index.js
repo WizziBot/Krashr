@@ -149,7 +149,7 @@ client.on('message',async message => {
         if (!bots[botId]) return;
 
         if(command === 'togglechat'){
-            chatOn[botId] = client.commands.get('togglechat').execute(message,chatOn,krashr)
+            chatOn[botId] = client.commands.get('togglechat').execute(message,botId,chatOn,krashr)
         } else if (command === 'inventory'){
             client.commands.get('inventory').execute(message,bots[botId],botId,commandArgs,krashr);
         } else if (command === 'cs'){

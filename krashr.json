@@ -1,16 +1,20 @@
 {
     "accounts" : [
         {
-            "username":"shackledramen@gmail.com",
-            "password":"Keroroboss174501!"
+            "username":"ywsloot@home.nl",
+            "password":"POLOmast15!"
         },
         {
-            "username":"shepsims@gmail.com",
-            "password":"Q3q4pow5!"
+            "username":"Anderson.Banh7@gmail.com",
+            "password":"Technoblode"
+        },
+        {
+            "username":"mattrodriguez2000@gmail.com",
+            "password":"Monok...7"
         }
     ],
-    "commandChannel": "krashr2",
-    "prefix": "~",
-    "token":"ODA4ODUxMTc4NjE1OTk2NDQ5.YCMjXA.8gSSulJWaJICAl-n5wSZi-_PSfk",
-    "autoPayTarget":"bruh1337"
+    "commandChannel": "krashr",
+    "prefix": "-",
+    "token":"ODA2OTAzMTA3NTk0MDkyNTU0.YBwNFA.CNrD-BT59yngjDNhivxI233yDm8",
+    "autoPayTarget":"Krashr404"
 }
