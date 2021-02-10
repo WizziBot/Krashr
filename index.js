@@ -273,27 +273,27 @@ function fullStop (bot) {
 
 function startFarmLoop(botId,y){
     try{
-    let mcData = getData(bots[botId].version)
-    yLevel[botId] = parseInt(y)
-    blocks[botId] = bots[botId].findBlocks({
-        matching: mcData.blocksByName.sugar_cane.id,
-        maxDistance: 10,
-        count: 400,
-    })
-    blocks[botId] = getValidBlocks(blocks[botId],yLevel)
-    blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
-    nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
-    nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
-    nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
-    const availableTools = bots[botId].inventory.items()
-    for (const tool of availableTools) {
-      if (tool.name === 'diamond_hoe') {
-        bots[botId].equip(tool, 'hand')
-        break
-      }
-    }
+        let mcData = getData(bots[botId].version)
+        yLevel[botId] = parseInt(y)
+        blocks[botId] = bots[botId].findBlocks({
+            matching: mcData.blocksByName.sugar_cane.id,
+            maxDistance: 10,
+            count: 400,
+        })
+        blocks[botId] = getValidBlocks(blocks[botId],yLevel)
+        blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+        nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
+        nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
+        nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
+        const availableTools = bots[botId].inventory.items()
+        for (const tool of availableTools) {
+        if (tool.name === 'diamond_hoe') {
+            bots[botId].equip(tool, 'hand')
+            break
+        }
+        }
 
-    farmKillSwitch[botId] = false;
+        farmKillSwitch[botId] = false;
     } catch(e){
         console.trace(e)
     }
@@ -375,7 +375,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         currblock = bots[botId].blockAt(nearblock,false)
                         fullStop(bots[botId])
                         bots[botId].dig(currblock, (err) => {
-                            if (err) throw err
+                            if (err) console.trace(err)
                         })
                         let movements = new Movements(bot, mcData)
                         movements.canDig = false;
@@ -427,7 +427,6 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         }
                     }
                 } catch(e) {
-                    console.trace(e)
                     amplifyCounter[botId] += 5
                     if (amplifyCounter > 100) {
                         console.log(`[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED]`)
@@ -584,10 +583,9 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                             intrusionAlert.delay = false;
                             setTimeout(async () => {
                                 intrusionAlert.delay = true;
-                            },5000)
+                            },10000)
                         }
                     } catch(e){
-                        console.trace(e)
                         console.log(player)
                     }
                 }
@@ -617,7 +615,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     blacklistAlert.delay = false;
                     setTimeout(async () => {
                         blacklistAlert.delay = true;
-                    },10000)
+                    },30000)
                 }
             })
         }
