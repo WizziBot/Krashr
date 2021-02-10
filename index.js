@@ -7,8 +7,8 @@ const mineflayer = require('mineflayer');
 const { Movements, goals } = require('mineflayer-pathfinder');
 const GoalFollow = goals.GoalFollow;
 const GoalBlock = goals.GoalBlock;
-const alertWhitelist = require('./whitelist.json');
-const blacklist = require('./blacklist.json');
+let alertWhitelist = require('./whitelist.json');
+let blacklist = require('./blacklist.json');
 const krashr = require('./krashr.json');
 const accounts = krashr.accounts;
 const commandChannel = krashr.commandChannel
@@ -173,7 +173,7 @@ client.on('message',async message => {
         } else if (command === 'intrusionalert'){
             intrusionAlert = client.commands.get('intrusionAlert').execute(message,intrusionAlert,commandArgs,krashr)
         } else if (command === 'blacklistalert'){
-            blacklistAlert = client.commands.get('blacklistAlert').execute(message,blacklistAlert,commandArgs,krashr)
+            blacklistAlert = client.commands.get('blacklistAlert').execute(message,blacklistAlert,krashr)
         } else if (command === 'inventory'){
             client.commands.get('inventory').execute(message,bots[botId],botId,commandArgs,krashr);
         } else if (command === 'cs'){
@@ -244,11 +244,9 @@ client.on('message',async message => {
                 do: false,
                 delay: true,
             };
-        } else if (command === 'updatewhitelist'){
-            alertWhitelist = require('./whitelist.json')
+        } else if (command === 'showwhitelist'){
             message.guild.channels.cache.find(ch => ch.name === commandChannel).send(JSON.stringify(alertWhitelist))
-        } else if (command === 'updateblacklist'){
-            blacklist = require('./blacklist.json')
+        } else if (command === 'showblacklist'){
             message.guild.channels.cache.find(ch => ch.name === commandChannel).send(JSON.stringify(blacklist))
         }
     } catch(e) {
@@ -562,37 +560,58 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
             let nearbyPlayers = Object.keys(nearbyPlayersData);
             nearbyPlayers.forEach(playerKey => {
                 let player = nearbyPlayersData[playerKey]
-                if(!player.entity) return;
-                if(alertWhitelist.includes(player.username)) return
-                if(calcDistance(bots[botId].entity.position,player.entity.position) < intrusionAlert.range){
+                if(player.entity && !alertWhitelist.includes(player.username)){
+                    if(calcDistance(bots[botId].entity.position,player.entity.position) < intrusionAlert.range){
+                        let currTime = new Date();
+                        let coordinates = []
+                        Object.values(player.entity.position).forEach(coord => {coordinates.push(Math.round(coord))})
+                        console.log(`[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username}) AT] : ${coordinates} : ${currTime}`)
+                        let alertEmbed = {
+                            color: 0xffff00,
+                            title: `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username})] : ${coordinates}`,
+                            timestamp: new Date()
+                        };
+                        client.guilds.cache.forEach(guild => {
+                            try{
+                                guild.channels.cache.find(ch => ch.name === alertsChannel).send('<@&808051486562058290>')
+                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                            } catch{
+                                //ignore
+                            }
+                        })
+                        intrusionAlert.delay = false;
+                        setTimeout(async () => {
+                            intrusionAlert.delay = true;
+                        },5000)
+                    }
+                }
+            })
+        }
+        if (blacklistAlert.do && blacklistAlert.delay){
+            let nearbyPlayersData = bot.players;
+            let nearbyPlayers = Object.keys(nearbyPlayersData);
+            nearbyPlayers.forEach(playerKey => {
+                let player = nearbyPlayersData[playerKey]
+                if(blacklist.includes(player.username)){
                     let currTime = new Date();
-                    let coordinates = []
-                    Object.values(player.entity.position).forEach(coord => {coordinates.push(Math.round(coord))})
-                    let alertMsg = `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username}) AT] : ${coordinates}`
-                    console.log(alertMsg + `AT : ${currTime}`)
+                    console.log(`[ID:${botId}] [BLACKLISTED PLAYER DETECTED (${player.username})] : ${currTime}`)
                     let alertEmbed = {
                         color: 0x150000,
-                        title: `[ID:${botId}] [PLAYER INTRUSION DETECTED (${player.username})] : ${coordinates}`,
+                        title: `[ID:${botId}] [BLACKLISTED PLAYER DETECTED (${player.username})]`,
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
                         try{
+                            guild.channels.cache.find(ch => ch.name === alertsChannel).send('<@&808051486562058290>')
                             guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
                         } catch{
                             //ignore
                         }
                     })
-                    client.guilds.cache.forEach(guild => {
-                        try{
-                            guild.channels.cache.find(ch => ch.name === alertsChannell).send('<@&808051486562058290>')
-                        } catch {
-                            //ignore
-                        }
-                    })
-                    intrusionAlert.delay = false;
+                    blacklistAlert.delay = false;
                     setTimeout(async () => {
-                        intrusionAlert.delay = true;
-                    },5000)
+                        blacklistAlert.delay = true;
+                    },10000)
                 }
             })
         }

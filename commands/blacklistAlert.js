@@ -1,16 +1,10 @@
 module.exports = {
     name: 'blacklistAlert',
     description: "Toggles all bots to detect blacklisted players online",
-    execute(message,blacklistAlert,commandArgs,krashr){
+    execute(message,blacklistAlert,krashr){
         try{
-            const range = commandArgs
-            if (!range){
-                message.channel.send(`[ERROR] Try using a valid syntax \`-blacklistAlert [maxrange/off]\``)
-                return
-            }
-            if(blacklistAlert.do === true && range === 'off'){
+            if(blacklistAlert.do === true){
                 blacklistAlert.do = false;
-                blacklistAlert.range = null;
                 const embed = {
                     color: 0xff0000,
                     title: `[ID:ALL] [BLACKLIST DETECTION] : [OFF]`,
@@ -28,7 +22,6 @@ module.exports = {
                 console.log(`[ID:ALL] [BLACKLIST DETECTION] : [OFF]`)
             } else if(blacklistAlert.do === false){
                 blacklistAlert.do = true;
-                blacklistAlert.range = parseInt(range);
                 const embed = {
                     color: 0x00ff00,
                     title: `[ID:ALL] [BLACKLIST DETECTION] : [ON]`,
