@@ -5,6 +5,8 @@ module.exports = {
         try{
             const { pathfinder } = require('mineflayer-pathfinder');
             const autoeat = require("mineflayer-auto-eat");
+            const commandChannel = krashr.commandChannel
+            const alertsChannel = krashr.alertsChannel
             //MINECRAFT BOT
             const splitArgs = commandArgs.split(' ');
             const serverIp = splitArgs.shift();
@@ -36,7 +38,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
             })
             bot.on('spawn', () => {
                 try{
@@ -62,9 +64,9 @@ module.exports = {
                             icon_url: message.guild.iconURL(),
                         },
                     };
-                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
+                    message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
                 } catch{
-                    message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send('Error while loading spawn event')
+                    message.guild.channels.cache.find(ch => ch.name === commandChannel).send('Error while loading spawn event')
                 }
 
             })
@@ -102,7 +104,7 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === krashr.alertChannel).send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: embed})
                 console.log(reason, loggedIn)
             })
             bot.on('error', (err) => {
@@ -120,13 +122,13 @@ module.exports = {
                         icon_url: message.guild.iconURL(),
                     },
                 };
-                message.guild.channels.cache.find(ch => ch.name === krashr.alertChannel).send({embed: embed})
+                message.guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: embed})
                 console.log(err)
             })
             addBot(bot)
         } catch(e){
             console.trace(e)
-            message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send(`[ERROR] Try using the correct syntax: \`-login serverIp port\``)
+            message.guild.channels.cache.find(ch => ch.name === commandChannel).send(`[ERROR] Try using the correct syntax: \`-login serverIp port\``)
         }
     }
 }

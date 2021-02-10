@@ -11,6 +11,7 @@ const alertWhitelist = require('./whitelist.json')
 const krashr = require('./krashr.json');
 const accounts = krashr.accounts;
 const commandChannel = krashr.commandChannel
+const alertsChannel = krashr.alertsChannel
 const PREFIX = krashr.prefix;
 let bots = [];
 let botCounter = 0;
@@ -120,7 +121,7 @@ client.once('ready', () => {
     };
     client.guilds.cache.forEach(guild => {
         try{
-            guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed:onlineEmbed})
+            guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed:onlineEmbed})
         } catch {
             //ignore
         }
@@ -135,7 +136,7 @@ client.on('message',async message => {
         if(message.guild === null) return;
         if(!message.content.startsWith(PREFIX) || message.author.bot) return;
         if(!message.member.roles.cache.find(role => role.name === "Krashr Mod") && message.member.id !== '372325472811352065') return
-        if(message.channel.name !== krashr.commandChannel) return;
+        if(message.channel.name !== commandChannel) return;
         const preargs = message.content.slice((PREFIX.length)).trim().split(' ');
         const args = preargs.filter(function (el) {
             return el != '';
@@ -226,6 +227,9 @@ client.on('message',async message => {
             blocks = [];
             nearBlocks = [];
             goal = [];
+        } else if (command === 'updatewhitelist'){
+            alertWhitelist = require('./whitelist.json')
+            message.guild.channels.cache.find(ch => ch.name === commandChannel).send(JSON.stringify(alertWhitelist))
         }
     } catch(e) {
         console.trace(e)
@@ -250,9 +254,9 @@ function fullStop (bot) {
 }
 
 function startFarmLoop(botId,y){
+    try{
     let mcData = getData(bots[botId].version)
     yLevel[botId] = parseInt(y)
-
     blocks[botId] = bots[botId].findBlocks({
         matching: mcData.blocksByName.sugar_cane.id,
         maxDistance: 10,
@@ -264,6 +268,9 @@ function startFarmLoop(botId,y){
     nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
     nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
     farmKillSwitch[botId] = false;
+    } catch(e){
+        
+    }
 }
 const getData = require('minecraft-data');
 function calcDistance(botPos,itemPos){
@@ -274,62 +281,46 @@ function calcDistance(botPos,itemPos){
     return dist
 }
 function getValidBlocks(blocksToSort, yLevelGet){
-    try{
-        let tempBlocks = []
-        blocksToSort.forEach(block => {
-            if (block.y === yLevelGet) tempBlocks.push(block)
-        })
-        return tempBlocks;
-    } catch(e){
-        console.trace(e)
-    }
+    let tempBlocks = []
+    blocksToSort.forEach(block => {
+        if (block.y === yLevelGet) tempBlocks.push(block)
+    })
+    return tempBlocks;
 }
 function getNearBlocks(blocksToSort,botPos){
-    try{
-        let tempBlocks = []
-        blocksToSort.forEach(block => {
-            if (calcDistance(botPos,block) < 5) tempBlocks.push(block)
-        })
-        return tempBlocks
-    } catch(e) {
-        console.trace(e)
-    }
+    let tempBlocks = []
+    blocksToSort.forEach(block => {
+        if (calcDistance(botPos,block) < 5) tempBlocks.push(block)
+    })
+    return tempBlocks
 }
 function checkIfAir(bot,nearbyBlocks){
-    try{
-        let tempNearBlocks = []
-        nearbyBlocks.forEach(block => {
-            let data = bot.blockAt(block,false);
-            if (data.name === 'sugar_cane'){
-                tempNearBlocks.push(block)
-            }
-        })
-        return tempNearBlocks
-    } catch(e) {
-        console.trace(e)
-        console.log('CHECKIFAIR')
-    }
+    let tempNearBlocks = []
+    nearbyBlocks.forEach(block => {
+        let data = bot.blockAt(block,false);
+        if (data.name === 'sugar_cane'){
+            tempNearBlocks.push(block)
+        }
+    })
+    return tempNearBlocks
 }
 function qSort(blocksPos,botPos){
-    try{
-        if (blocksPos.length < 2){
-            return blocksPos
-        }
-        const pivot = blocksPos[blocksPos.length - 1];
-        const left = [],
-            right = []
-        for (let i = 0; i < blocksPos.length - 1; i++) {
-            if (calcDistance(botPos,blocksPos[i]) < calcDistance(botPos,pivot)) {
-            left.push(blocksPos[i])
-            } else {
-            right.push(blocksPos[i])
-            }
-        }
-        return [...qSort(left,botPos), pivot, ...qSort(right,botPos)]
-    } catch(e) {
-        console.trace(e)
-        console.log('QSORT')
+    
+    if (blocksPos.length < 2){
+        return blocksPos
     }
+    const pivot = blocksPos[blocksPos.length - 1];
+    const left = [],
+        right = []
+    for (let i = 0; i < blocksPos.length - 1; i++) {
+        if (calcDistance(botPos,blocksPos[i]) < calcDistance(botPos,pivot)) {
+        left.push(blocksPos[i])
+        } else {
+        right.push(blocksPos[i])
+        }
+    }
+    return [...qSort(left,botPos), pivot, ...qSort(right,botPos)]
+
 }
 function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel){
     try{
@@ -396,10 +387,10 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                                 timestamp: new Date()
                             };
                             client.guilds.cache.forEach(guild => {
-                                guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
+                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
                             })
                             memoryWarning[botId] = false
-                            setTimeout(async () => {
+                            setTimeout(() => {
                                 memoryWarning[botId] = true
                             },5000)
                         }
@@ -415,7 +406,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                             timestamp: new Date()
                         };
                         client.guilds.cache.forEach(guild => {
-                            guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
+                            guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
                         })
                         farmKillSwitch[botId] = true
                     } else {
@@ -447,7 +438,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
+                        guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
                     })
                     farmKillSwitch[botId] = true
                 }
@@ -497,7 +488,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
+                        guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
                     })
                     killSwitch(botId)
                 }
@@ -509,7 +500,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     timestamp: new Date()
                 };
                 client.guilds.cache.forEach(guild => {
-                    guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
+                    guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
                 })
                 killSwitch(botId)
             }
@@ -545,8 +536,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
-                        guild.channels.cache.find(ch => ch.name === krashr.alertsChannel).send({embed: alertEmbed})
-                        guild.channels.cache.find(ch => ch.name === krashr.alertsChannell).send('<@&808051486562058290>')
+                        guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                        guild.channels.cache.find(ch => ch.name === alertsChannell).send('<@&808051486562058290>')
                     })
                     intrusionAlert.delay = false;
                     setTimeout(async () => {
