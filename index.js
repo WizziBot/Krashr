@@ -121,7 +121,7 @@ client.on('message',async message => {
         if(message.guild === null) return;
         if(!message.content.startsWith(PREFIX) || message.author.bot) return;
         if(!message.member.roles.cache.find(role => role.name === "Krashr Mod") && message.member.id !== '372325472811352065') return
-        if(message.channel.name !== "krashr" && message.channel.name !== "krashr-chat-logger") return;
+        if(message.channel.name !== krashr.commandChannel && message.channel.name !== "krashr-chat-logger") return;
         const preargs = message.content.slice((PREFIX.length)).trim().split(' ');
         const args = preargs.filter(function (el) {
             return el != '';
