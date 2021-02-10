@@ -7,5 +7,6 @@
     ],
     "commandChannel": "krashr",
     "prefix": "-",
-    "token":""
+    "token":"",
+    "autoPayTarget":"Krashr404"
 }
