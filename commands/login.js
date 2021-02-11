@@ -14,7 +14,6 @@ module.exports = {
             if (!accessPort){
                 accessPort = 25565
             }
-            
             let bot = mineflayer.createBot({
                 host: serverIp,
                 port: accessPort,

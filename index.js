@@ -11,7 +11,6 @@ const GoalBlock = goals.GoalBlock;
 let alertWhitelist = require('./whitelist.json');
 let blacklist = require('./blacklist.json');
 const krashr = require('./krashr.json');
-const proxies = require('./proxies.json')
 const accounts = krashr.accounts;
 const commandChannel = krashr.commandChannel
 const alertsChannel = krashr.alertsChannel
@@ -458,7 +457,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     }
                     nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
                     let memoryLength = blocks[botId].length;
-                    if (memoryLength < 50 && memoryWarning[botId] === true){
+                    if (memoryLength < 20 && memoryWarning[botId] === true){
                         console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
                         let alertEmbed = {
                             color: 0x0000ff,
@@ -626,7 +625,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         console.log(`To Playername : ${Object.values(bot.entities).find(entity => entity.type === 'player' && entity.id === player.uuid)}`)
                         let alertEmbed = {
                             color: 0xffff00,
-                            title: `[ID:${botId}] [INVALID PLAYER DETECTED (${player.uuid})] : ${coordinates}`,
+                            title: `[ID:${botId}] [INVALID PLAYER DETECTED (${player.uuid})]`,
                             timestamp: new Date()
                         };
                         client.guilds.cache.forEach(guild => {
