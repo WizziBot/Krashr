@@ -160,8 +160,7 @@ client.on('message',async message => {
             appendNewData()
             client.commands.get('login').execute(bots.length,accounts[bots.length],client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
         } else if (command === 'loginall'){
-            bots = [];
-            let counter = 0;
+            let counter = bots.length;
             accounts.forEach((account) => {
                 appendNewData()
                 client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
@@ -412,6 +411,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     blocks[botId] = checkIfAir(bots[botId],blocks[botId])
                     console.log('QSORT')
                     console.log(blocks[botId])
+                    var arrayUnique = function (arr) {
+                        return arr.filter(function(item, index){
+                            return arr.indexOf(item) >= index;
+                        });
+                    };
                     let filtered = []
                     blocks[botId].forEach((block) => {
                         console.log('new')
