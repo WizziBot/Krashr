@@ -327,8 +327,13 @@ function checkIfAir(bot,nearbyBlocks){
     let tempNearBlocks = []
     nearbyBlocks.forEach(block => {
         let data = bot.blockAt(block,false);
-        if (data.name === 'sugar_cane'){
-            tempNearBlocks.push(block)
+        try{
+            if (data.name === 'sugar_cane'){
+                tempNearBlocks.push(block)
+            }
+        }catch{
+            console.log(nearBlocks)
+            console.log(data)
         }
     })
     return tempNearBlocks
@@ -348,7 +353,8 @@ function qSort(blocksPos,botPos){
         right.push(blocksPos[i])
         }
     }
-    return [...qSort(left,botPos), pivot, ...qSort(right,botPos)]
+    let semiFinal = [...qSort(left,botPos), pivot, ...qSort(right,botPos)];
+    return Array.from(new Set(semiFinal));
 
 }
 function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel){
@@ -365,7 +371,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
         //## sugarcane farming algoritm VERSION 2.10.0 (iterative)
         if (!farmKillSwitch[botId] && terminationDelay[botId]) {
             let shiftblock = blocks[botId].shift()
+            console.log('near')
+            console.log(nearBlocks[botId])
             nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
+            console.log(nearBlocks[botId])
+            console.log('near')
             if (nearBlocks[botId].length > 2){
                 nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
             }
@@ -401,6 +411,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     let validblocks = getValidBlocks(newBlocks,yLevel)
                     blocks[botId].push(...validblocks)
                     blocks[botId].push(shiftblock)
+                    console.log(blocks[botId])
                     blocks[botId] = checkIfAir(bots[botId],blocks[botId])
                     blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
                     while (blocks[botId].length > 500){
