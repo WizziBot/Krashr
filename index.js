@@ -22,7 +22,6 @@ let lookAtPlayer = [];
 let pickUpItems = [];
 let followPlayer = [];
 let autosell = [];
-let autoeat = [];
 let farmKillSwitch = [];
 let yLevel = [];
 let blocks = [];
@@ -31,7 +30,6 @@ let goal = [];
 let memoryWarning = [];
 let amplifyCounter = [];
 let terminationDelay = [];
-let blockMemoryCounter =[]
 let intrusionAlert = {
     range: null,
     do: false,
@@ -41,12 +39,10 @@ let blacklistAlert = {
     do: false,
     delay: true,
 };
-let reboot = false;
 function appendNewData(){
     chatOn.push(false);
     lookAtPlayer.push(false);
     autosell.push(false)
-    autoeat.push(false)
     farmKillSwitch.push(true)
     yLevel.push(0)
     blocks.push(null)
@@ -55,7 +51,6 @@ function appendNewData(){
     memoryWarning.push(true)
     amplifyCounter.push(10)
     terminationDelay.push(true)
-    blockMemoryCounter.push(0)
     pickUpItems.push({
         item:null,
         do: false,
@@ -110,13 +105,13 @@ function activateKillSwitch(botId,message){
     };
     message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
 }
-function resetVariables(){
+function resetVariables(hard = false){
+    let curBotCount = bots.length;
     chatOn = [];
     lookAtPlayer = [];
     pickUpItems = [];
     followPlayer = [];
     autosell = [];
-    autoeat = [];
     farmKillSwitch = [];
     yLevel = [];
     blocks = [];
@@ -134,6 +129,11 @@ function resetVariables(){
         do: false,
         delay: true,
     };
+    if(!hard){
+        for(i = 0; i < curBotCount; i++){
+            appendNewData()
+        }
+    }
 }
 function addBot(bot){
     if(bot){
@@ -251,7 +251,7 @@ client.on('message',async message => {
                 bot.quit()
             })
             bots = []
-            resetVariables()
+            resetVariables(true)
         } else if (command === 'showwhitelist'){
             message.guild.channels.cache.find(ch => ch.name === commandChannel).send(JSON.stringify(alertWhitelist))
         } else if (command === 'showblacklist'){
@@ -262,22 +262,6 @@ client.on('message',async message => {
         message.guild.channels.cache.find(ch => ch.name === commandChannel).send(`[ERROR: BOT DOES NOT EXIST OR INVALID SYNTAX]`)
     }
 });
-function fullStop (bot) {
-    bot.clearControlStates()
-
-    // Force horizontal velocity to 0 (otherwise inertia can move us too far)
-    // Kind of cheaty, but the server will not tell the difference
-    bot.entity.velocity.x = 0
-    bot.entity.velocity.z = 0
-
-    const blockX = Math.floor(bot.entity.position.x) + 0.5
-    const blockZ = Math.floor(bot.entity.position.z) + 0.5
-
-    // Make sure our bounding box don't collide with neighboring blocks
-    // otherwise recenter the position
-    if (Math.abs(bot.entity.position.x - blockX) > 0.2) { bot.entity.position.x = blockX }
-    if (Math.abs(bot.entity.position.z - blockZ) > 0.2) { bot.entity.position.z = blockZ }
-}
 
 function startFarmLoop(botId,y){
     try{
@@ -344,7 +328,7 @@ function checkIfAir(bot,nearbyBlocks){
             }
         }catch(e){
             console.trace(e)
-            return nearbyBlocks
+            return tempNearBlocks
         }
     })
     return tempNearBlocks
@@ -378,18 +362,15 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 bot.lookAt(pos)
             }
         }
-        //## sugarcane farming algoritm VERSION 2.11.3 (iterative)
+        //## sugarcane farming algoritm VERSION 2.12 (iterative)
         if (!farmKillSwitch[botId] && terminationDelay[botId]) {
             let shiftblock = blocks[botId].shift()
-            nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
-            nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
             let nearblock = nearBlocks[botId].shift()
             try{
                 let currblock;
                 if (nearblock){
                     amplifyCounter[botId] = 10
                     currblock = bots[botId].blockAt(nearblock,false)
-                    fullStop(bots[botId])
                     bots[botId].dig(currblock, (err) => {
                         if (err) console.trace(err)
                     })
@@ -397,7 +378,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     movements.canDig = false;
                     movements.scafoldingBlocks = []
                     bots[botId].pathfinder.setMovements(movements)
-                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
+                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y, currblock.position.z)
                     bots[botId].pathfinder.setGoal(goal[botId],false)
                 } else if (shiftblock) {
                     currblock = bots[botId].blockAt(shiftblock,false)
@@ -405,7 +386,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     movements.canDig = false;
                     movements.scafoldingBlocks = []
                     bots[botId].pathfinder.setMovements(movements)
-                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
+                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y, currblock.position.z)
                     bots[botId].pathfinder.setGoal(goal[botId],false)
                     let newBlocks = bots[botId].findBlocks({
                         matching: mcData.blocksByName.sugar_cane.id,
@@ -421,8 +402,10 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         blocks[botId].pop()
                     }
                     nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
+                    nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
+                    nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
                     let memoryLength = blocks[botId].length;
-                    if (memoryLength < 100 && memoryWarning[botId] === true){
+                    if (memoryLength < 50 && memoryWarning[botId] === true){
                         console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
                         let alertEmbed = {
                             color: 0x0000ff,
@@ -480,7 +463,6 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 console.trace(e)
             }
         }
-
         //####
         if (pickUpItems.do && !followPlayer.follow) {
             let itemEntity;
@@ -638,37 +620,17 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
     } catch(e){
         console.trace(e)
         console.log('ON TICK ERROR')
-        let currTime = new Date();
-        if (typeof e == TypeError){
-            console.log(`[REBOOT DETECTED] AT: ${currTime}`)
-            reboot = true
-        }
     }
 }
 function botLoop(){
     try{
-    let counterB = 0;
-    bots.forEach(bot => {
-        onTick(bot,counterB,lookAtPlayer[counterB],followPlayer[counterB],pickUpItems[counterB],autosell[counterB],yLevel[counterB])
-        counterB += 1
-    })
-
-    if (!reboot){
-        setTimeout(() => {
-            botLoop()
-        },200)
-    } else {
-        console.log('[RECONNECTING]')
-        setTimeout(() => {
-            console.log('[JOINING FACTIONS]')
+        setInterval(()=>{
+            let counterB = 0;
             bots.forEach(bot => {
-                bot.chat(`/factions`)
+                onTick(bot,counterB,lookAtPlayer[counterB],followPlayer[counterB],pickUpItems[counterB],autosell[counterB],yLevel[counterB])
+                counterB += 1
             })
-            setTimeout(() => {
-                botLoop()
-            },5000)
-        },5000)
-    }
+        },150)
     } catch(e) {
         console.trace(e)
         console.log('MAINLOOP')

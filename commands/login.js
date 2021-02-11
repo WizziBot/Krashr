@@ -1,7 +1,7 @@
 module.exports = {
     name: 'login',
     description: "Logs the bot onto a server",
-    async execute(botId,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr){
+    async execute(botId,account,client,message,commandArgs,mineflayer,getChatOn,addBot,resetVariables,krashr){
         try{
             const { pathfinder } = require('mineflayer-pathfinder');
             const autoeat = require("mineflayer-auto-eat");
@@ -28,7 +28,7 @@ module.exports = {
                 console.log(`[ID:${botId}] MINECRAFT : [LOGGED IN]`)
                 const embed = {
                     color: 0x0089eb,
-                    title: `[ID:${botId}] [${account.username}] [LOGGED IN] --> [${serverIp}]:[${accessPort}]`,
+                    title: `[ID:${botId}] [${bot.username}] [LOGGED IN] --> [${serverIp}]:[${accessPort}]`,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),
@@ -45,15 +45,14 @@ module.exports = {
                 try{
                     bot.autoEat.options = {
                         priority: "foodPoints",
-                        startAt: 20,
-                        bannedFood: [],
+                        startAt:15,
                     }
                     let pos = bot.entity.position;
                     let coordinates = []
                     Object.values(pos).forEach(coord => {coordinates.push(Math.round(coord))})
                     const embed = {
                         color: 0x8800f9,
-                        title: `[ID:${botId}] [SPAWNED AT COORDINATES]:`,
+                        title: `[ID:${botId}] [${bot.username}] [SPAWNED AT COORDINATES]:`,
                         description:`\`${coordinates}\``,
                         author: {
                             name: message.author.username,
@@ -65,7 +64,8 @@ module.exports = {
                             icon_url: message.guild.iconURL(),
                         },
                     };
-                    message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
+                    message.guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: embed})
+                    resetVariables()
                 } catch{
                     message.guild.channels.cache.find(ch => ch.name === commandChannel).send('Error while loading spawn event')
                 }
