@@ -10,12 +10,12 @@ const GoalBlock = goals.GoalBlock;
 let alertWhitelist = require('./whitelist.json');
 let blacklist = require('./blacklist.json');
 const krashr = require('./krashr.json');
+const proxies = require('./proxies.json')
 const accounts = krashr.accounts;
 const commandChannel = krashr.commandChannel
 const alertsChannel = krashr.alertsChannel
 const PREFIX = krashr.prefix;
 let bots = [];
-let botCounter = 0;
 let chatOn = [];
 let lookAtPlayer = [];
 let pickUpItems = [];
@@ -106,8 +106,10 @@ function activateKillSwitch(botId,message){
     message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
 }
 function addBot(bot){
-    bots.push(bot)
-    botCounter += 1
+    if(bot){
+        console.log('ADDED BOT')
+        bots.push(bot)
+    }
 }
 //DISCORD BOT
 
@@ -155,13 +157,13 @@ client.on('message',async message => {
 
         if (command === 'login'){
             appendNewData()
-            client.commands.get('login').execute(botCounter,accounts[botCounter],client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
+            client.commands.get('login').execute(bots.length,accounts[bots.length],client,message,commandArgs,mineflayer,getChatOn,addBot,krashr,proxies)
         } else if (command === 'loginall'){
             bots = [];
             let counter = 0;
             accounts.forEach((account) => {
                 appendNewData()
-                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
+                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr,proxies)
                 counter += 1;
             })
         }
@@ -220,7 +222,7 @@ client.on('message',async message => {
             bots.forEach(bot =>{
                 bot.quit()
             })
-            botCounter = 0
+            bots.length = 0
             bots = []
             chatOn = [];
             lookAtPlayer = [];
@@ -637,6 +639,7 @@ function botLoop(){
         onTick(bot,counterB,lookAtPlayer[counterB],followPlayer[counterB],pickUpItems[counterB],autosell[counterB],yLevel[counterB])
         counterB += 1
     })
+
     if (!reboot){
         setTimeout(() => {
             botLoop()
