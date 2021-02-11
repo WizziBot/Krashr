@@ -362,7 +362,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 bot.lookAt(pos)
             }
         }
-        //## sugarcane farming algoritm VERSION 2.9.1 (iterative)
+        //## sugarcane farming algoritm VERSION 2.10.0 (iterative)
         if (!farmKillSwitch[botId] && terminationDelay[botId]) {
             let shiftblock = blocks[botId].shift()
             nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
@@ -386,7 +386,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         bots[botId].pathfinder.setMovements(movements)
                         goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
                         bots[botId].pathfinder.setGoal(goal[botId],false)
-                    } else {
+                    } else if (shiftblock) {
                         currblock = bots[botId].blockAt(shiftblock,false)
                         let movements = new Movements(bot, mcData)
                         movements.canDig = false;
@@ -428,40 +428,42 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                                 memoryWarning[botId] = true
                             },5000)
                         }
+                    } else {
+                        amplifyCounter[botId] += 5
+                        if (amplifyCounter > 100) {
+                            console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`)
+                            let alertEmbed = {
+                                color: 0xff0000,
+                                title: `[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`,
+                                timestamp: new Date()
+                            };
+                            client.guilds.cache.forEach(guild => {
+                                try {
+                                    guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                                } catch {
+                                    //ignore
+                                }
+                            })
+                            amplifyCounter[botId] = 10
+                            terminationDelay[botId] = false
+                            setTimeout(() => {
+                                terminationDelay[botId] = true
+                            },60000)
+                        } else {
+                            let currTime = new Date();
+                            console.log(`[ID:${botId}] AMPLIFIER: ${amplifyCounter[botId]} AT:${currTime}`)
+                            blocks[botId] = bots[botId].findBlocks({
+                                matching: mcData.blocksByName.sugar_cane.id,
+                                maxDistance: amplifyCounter[botId],
+                                count: (400 + (amplifyCounter[botId] ** 2)),
+                            })
+                            blocks[botId] = getValidBlocks(blocks[botId],yLevel)
+                            blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                            nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
+                        }
                     }
                 } catch(e) {
-                    amplifyCounter[botId] += 5
-                    if (amplifyCounter > 100) {
-                        console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`)
-                        let alertEmbed = {
-                            color: 0xff0000,
-                            title: `[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`,
-                            timestamp: new Date()
-                        };
-                        client.guilds.cache.forEach(guild => {
-                            try {
-                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
-                            } catch {
-                                //ignore
-                            }
-                        })
-                        amplifyCounter[botId] = 10
-                        terminationDelay[botId] = false
-                        setTimeout(() => {
-                            terminationDelay[botId] = true
-                        },60000)
-                    } else {
-                        let currTime = new Date();
-                        console.log(`[ID:${botId}] AMPLIFIER: ${amplifyCounter[botId]} AT:${currTime}`)
-                        blocks[botId] = bots[botId].findBlocks({
-                            matching: mcData.blocksByName.sugar_cane.id,
-                            maxDistance: amplifyCounter[botId],
-                            count: (400 + (amplifyCounter[botId] ** 2)),
-                        })
-                        blocks[botId] = getValidBlocks(blocks[botId],yLevel)
-                        blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
-                        nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
-                    }
+                    console.trace(e)
                 }
             } else {
                 blocks[botId] = bots[botId].findBlocks({
