@@ -29,6 +29,7 @@ let nearBlocks = [];
 let goal = [];
 let memoryWarning = [];
 let amplifyCounter = [];
+let terminationDelay = [];
 let intrusionAlert = {
     range: null,
     do: false,
@@ -51,6 +52,7 @@ function appendNewData(){
     goal.push(null)
     memoryWarning.push(true)
     amplifyCounter.push(10)
+    terminationDelay.push(true)
     pickUpItems.push({
         item:null,
         do: false,
@@ -107,7 +109,6 @@ function activateKillSwitch(botId,message){
 }
 function addBot(bot){
     if(bot){
-        console.log('ADDED BOT')
         bots.push(bot)
     }
 }
@@ -157,13 +158,13 @@ client.on('message',async message => {
 
         if (command === 'login'){
             appendNewData()
-            client.commands.get('login').execute(bots.length,accounts[bots.length],client,message,commandArgs,mineflayer,getChatOn,addBot,krashr,proxies)
+            client.commands.get('login').execute(bots.length,accounts[bots.length],client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
         } else if (command === 'loginall'){
             bots = [];
             let counter = 0;
             accounts.forEach((account) => {
                 appendNewData()
-                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr,proxies)
+                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
                 counter += 1;
             })
         }
@@ -237,6 +238,7 @@ client.on('message',async message => {
             goal = [];
             memoryWarning = [];
             amplifyCounter = [];
+            terminationDelay = [];
             intrusionAlert = {
                 range: null,
                 do: false,
@@ -362,7 +364,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
             }
         }
         //## sugarcane farming algoritm VERSION 2.9.1 (iterative)
-        if (!farmKillSwitch[botId]) {
+        if (!farmKillSwitch[botId] && terminationDelay[botId]) {
             let shiftblock = blocks[botId].shift()
             nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
             if (nearBlocks[botId].length > 2){
@@ -431,10 +433,10 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 } catch(e) {
                     amplifyCounter[botId] += 5
                     if (amplifyCounter > 100) {
-                        console.log(`[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED]`)
+                        console.log(`[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`)
                         let alertEmbed = {
                             color: 0xff0000,
-                            title: `[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING]`,
+                            title: `[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`,
                             timestamp: new Date()
                         };
                         client.guilds.cache.forEach(guild => {
@@ -444,7 +446,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                                 //ignore
                             }
                         })
-                        farmKillSwitch[botId] = true
+                        amplifyCounter[botId] = 10
+                        terminationDelay[botId] = false
+                        setTimeout(() => {
+                            terminationDelay[botId] = true
+                        },60000)
                     } else {
                         let currTime = new Date();
                         console.log(`[ID:${botId}] AMPLIFIER: ${amplifyCounter[botId]} AT:${currTime}`)
