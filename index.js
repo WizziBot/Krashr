@@ -30,6 +30,7 @@ let goal = [];
 let memoryWarning = [];
 let amplifyCounter = [];
 let terminationDelay = [];
+let recursiveMining = [];
 let intrusionAlert = {
     range: null,
     do: false,
@@ -51,6 +52,7 @@ function appendNewData(){
     memoryWarning.push(true)
     amplifyCounter.push(10)
     terminationDelay.push(true)
+    recursiveMining.push(false)
     pickUpItems.push({
         item:null,
         do: false,
@@ -120,6 +122,7 @@ function resetVariables(hard = false){
     memoryWarning = [];
     amplifyCounter = [];
     terminationDelay = [];
+    recursiveMining = [];
     intrusionAlert = {
         range: null,
         do: false,
@@ -313,6 +316,7 @@ function getNearBlocks(blocksToSort,botPos){
     return tempBlocks
 }
 function checkIfAir(bot,nearbyBlocks){
+    if(nearbyBlocks.length === 0) return nearbyBlocks
     let tempNearBlocks = []
     let lastBlock = new Vec3(0,0,0)
     nearbyBlocks.forEach(block => {
@@ -362,32 +366,49 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 bot.lookAt(pos)
             }
         }
-        //## sugarcane farming algoritm VERSION 2.12 (iterative)
+        //## sugarcane farming algoritm VERSION 3.0.1 (iterative)
         if (!farmKillSwitch[botId] && terminationDelay[botId]) {
             let shiftblock = blocks[botId].shift()
-            let nearblock = nearBlocks[botId].shift()
+            nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
+            nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
             try{
-                let currblock;
-                if (nearblock){
+                if (nearBlocks[botId].length > 0){
                     amplifyCounter[botId] = 10
-                    currblock = bots[botId].blockAt(nearblock,false)
-                    console.log(currblock.name)
-                    bots[botId].dig(currblock, (err) => {
-                        if (err) console.trace(err)
-                    })
-                    let movements = new Movements(bot, mcData)
-                    movements.canDig = false;
-                    movements.scafoldingBlocks = []
-                    bots[botId].pathfinder.setMovements(movements)
-                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y, currblock.position.z)
-                    bots[botId].pathfinder.setGoal(goal[botId],false)
+                    function rMine(){
+                        recursiveMining[botId] = true;
+                        let nearblock = nearBlocks[botId].shift()
+                        let currblock = bots[botId].blockAt(nearblock,false)
+                        bots[botId].dig(currblock,(err) => {
+                            if (err) throw err
+                            if(nearBlocks[botId].length > 0){
+                                setTimeout(()=>{
+                                    rMine()
+                                },50)
+                            } else {
+                                recursiveMining[botId] = false;
+                            }
+                        })
+                    }
+                    if(!recursiveMining[botId]){
+                        rMine()
+                    } else {
+                        blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                        blocks[botId] = checkIfAir(bots[botId],blocks[botId])
+                        let currblock = bots[botId].blockAt(shiftblock,false)
+                        let movements = new Movements(bot, mcData)
+                        movements.canDig = false;
+                        movements.scafoldingBlocks = []
+                        bots[botId].pathfinder.setMovements(movements)
+                        goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
+                        bots[botId].pathfinder.setGoal(goal[botId],false)
+                    }
                 } else if (shiftblock) {
-                    currblock = bots[botId].blockAt(shiftblock,false)
+                    let currblock = bots[botId].blockAt(shiftblock,false)
                     let movements = new Movements(bot, mcData)
                     movements.canDig = false;
                     movements.scafoldingBlocks = []
                     bots[botId].pathfinder.setMovements(movements)
-                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y, currblock.position.z)
+                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
                     bots[botId].pathfinder.setGoal(goal[botId],false)
                     let newBlocks = bots[botId].findBlocks({
                         matching: mcData.blocksByName.sugar_cane.id,
@@ -403,8 +424,6 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         blocks[botId].pop()
                     }
                     nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
-                    nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
-                    nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
                     let memoryLength = blocks[botId].length;
                     if (memoryLength < 50 && memoryWarning[botId] === true){
                         console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
