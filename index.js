@@ -370,125 +370,99 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
             }
             let nearblock = nearBlocks[botId].shift()
-            if (shiftblock || nearblock){
-                try{
-                    let currblock;
-                    if (nearblock){
-                        amplifyCounter[botId] = 10
-                        currblock = bots[botId].blockAt(nearblock,false)
-                        fullStop(bots[botId])
-                        bots[botId].dig(currblock, (err) => {
-                            if (err) console.trace(err)
-                        })
-                        let movements = new Movements(bot, mcData)
-                        movements.canDig = false;
-                        movements.scafoldingBlocks = []
-                        bots[botId].pathfinder.setMovements(movements)
-                        goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
-                        bots[botId].pathfinder.setGoal(goal[botId],false)
-                    } else if (shiftblock) {
-                        currblock = bots[botId].blockAt(shiftblock,false)
-                        let movements = new Movements(bot, mcData)
-                        movements.canDig = false;
-                        movements.scafoldingBlocks = []
-                        bots[botId].pathfinder.setMovements(movements)
-                        goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
-                        bots[botId].pathfinder.setGoal(goal[botId],false)
-                        let newBlocks = bots[botId].findBlocks({
-                            matching: mcData.blocksByName.sugar_cane.id,
-                            maxDistance: 10,
-                            count: 400,
-                        })
-                        let validblocks = getValidBlocks(newBlocks,yLevel)
-                        blocks[botId].push(...validblocks)
-                        blocks[botId].push(shiftblock)
-                        blocks[botId] = checkIfAir(bots[botId],blocks[botId])
-                        blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
-                        while (blocks[botId].length > 500){
-                            blocks[botId].pop()
-                        }
-                        nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
-                        let memoryLength = blocks[botId].length;
-                        if (memoryLength < 100 && memoryWarning[botId] === true){
-                            console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
-                            let alertEmbed = {
-                                color: 0x0000ff,
-                                title: `[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`,
-                                timestamp: new Date()
-                            };
-                            client.guilds.cache.forEach(guild => {
-                                try {
-                                    guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
-                                } catch {
-                                    //ignore
-                                }
-                            })
-                            memoryWarning[botId] = false
-                            setTimeout(() => {
-                                memoryWarning[botId] = true
-                            },5000)
-                        }
-                    } else {
-                        amplifyCounter[botId] += 5
-                        if (amplifyCounter > 100) {
-                            console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`)
-                            let alertEmbed = {
-                                color: 0xff0000,
-                                title: `[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`,
-                                timestamp: new Date()
-                            };
-                            client.guilds.cache.forEach(guild => {
-                                try {
-                                    guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
-                                } catch {
-                                    //ignore
-                                }
-                            })
-                            amplifyCounter[botId] = 10
-                            terminationDelay[botId] = false
-                            setTimeout(() => {
-                                terminationDelay[botId] = true
-                            },60000)
-                        } else {
-                            let currTime = new Date();
-                            console.log(`[ID:${botId}] AMPLIFIER: ${amplifyCounter[botId]} AT:${currTime}`)
-                            blocks[botId] = bots[botId].findBlocks({
-                                matching: mcData.blocksByName.sugar_cane.id,
-                                maxDistance: amplifyCounter[botId],
-                                count: (400 + (amplifyCounter[botId] ** 2)),
-                            })
-                            blocks[botId] = getValidBlocks(blocks[botId],yLevel)
-                            blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
-                            nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
-                        }
-                    }
-                } catch(e) {
-                    console.trace(e)
-                }
-            } else {
-                blocks[botId] = bots[botId].findBlocks({
-                    matching: mcData.blocksByName.sugar_cane.id,
-                    maxDistance: 10,
-                    count: 400,
-                })
-                blocks[botId] = getValidBlocks(blocks[botId],yLevel)
-                blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
-                nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
-                if (blocks[botId].length === 0) {
-                    let alertEmbed = {
-                        color: 0xff0000,
-                        title: `[ID:${botId}] [CANNOT DETECT SUGARCANE] [TERMINATING FARMING]`,
-                        timestamp: new Date()
-                    };
-                    client.guilds.cache.forEach(guild => {
-                        try{
-                            guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
-                        } catch {
-                            //ignore
-                        }
+            try{
+                let currblock;
+                if (nearblock){
+                    amplifyCounter[botId] = 10
+                    currblock = bots[botId].blockAt(nearblock,false)
+                    fullStop(bots[botId])
+                    bots[botId].dig(currblock, (err) => {
+                        if (err) console.trace(err)
                     })
-                    farmKillSwitch[botId] = true
+                    let movements = new Movements(bot, mcData)
+                    movements.canDig = false;
+                    movements.scafoldingBlocks = []
+                    bots[botId].pathfinder.setMovements(movements)
+                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
+                    bots[botId].pathfinder.setGoal(goal[botId],false)
+                } else if (shiftblock) {
+                    currblock = bots[botId].blockAt(shiftblock,false)
+                    let movements = new Movements(bot, mcData)
+                    movements.canDig = false;
+                    movements.scafoldingBlocks = []
+                    bots[botId].pathfinder.setMovements(movements)
+                    goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
+                    bots[botId].pathfinder.setGoal(goal[botId],false)
+                    let newBlocks = bots[botId].findBlocks({
+                        matching: mcData.blocksByName.sugar_cane.id,
+                        maxDistance: 10,
+                        count: 400,
+                    })
+                    let validblocks = getValidBlocks(newBlocks,yLevel)
+                    blocks[botId].push(...validblocks)
+                    blocks[botId].push(shiftblock)
+                    blocks[botId] = checkIfAir(bots[botId],blocks[botId])
+                    blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                    while (blocks[botId].length > 500){
+                        blocks[botId].pop()
+                    }
+                    nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
+                    let memoryLength = blocks[botId].length;
+                    if (memoryLength < 100 && memoryWarning[botId] === true){
+                        console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
+                        let alertEmbed = {
+                            color: 0x0000ff,
+                            title: `[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`,
+                            timestamp: new Date()
+                        };
+                        client.guilds.cache.forEach(guild => {
+                            try {
+                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                            } catch {
+                                //ignore
+                            }
+                        })
+                        memoryWarning[botId] = false
+                        setTimeout(() => {
+                            memoryWarning[botId] = true
+                        },5000)
+                    }
+                } else {
+                    amplifyCounter[botId] += 5
+                    if (amplifyCounter > 100) {
+                        console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`)
+                        let alertEmbed = {
+                            color: 0xff0000,
+                            title: `[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`,
+                            timestamp: new Date()
+                        };
+                        client.guilds.cache.forEach(guild => {
+                            try {
+                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                            } catch {
+                                //ignore
+                            }
+                        })
+                        amplifyCounter[botId] = 10
+                        terminationDelay[botId] = false
+                        setTimeout(() => {
+                            terminationDelay[botId] = true
+                        },60000)
+                    } else {
+                        let currTime = new Date();
+                        console.log(`[ID:${botId}] AMPLIFIER: ${amplifyCounter[botId]} AT:${currTime}`)
+                        blocks[botId] = bots[botId].findBlocks({
+                            matching: mcData.blocksByName.sugar_cane.id,
+                            maxDistance: amplifyCounter[botId],
+                            count: (400 + (amplifyCounter[botId] ** 2)),
+                        })
+                        blocks[botId] = getValidBlocks(blocks[botId],yLevel)
+                        blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                        nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
+                    }
                 }
+            } catch(e) {
+                console.trace(e)
             }
         }
 
