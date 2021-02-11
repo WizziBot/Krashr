@@ -223,7 +223,6 @@ client.on('message',async message => {
             bots.forEach(bot =>{
                 bot.quit()
             })
-            bots.length = 0
             bots = []
             chatOn = [];
             lookAtPlayer = [];
@@ -594,9 +593,24 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                             },10000)
                         }
                     } catch(e){
+                        console.trace(e)
                         console.log(player)
-                        console.log(`CAUGHT FAULTY PLAYER : ${player.uuid}`)
-                        console.log(`To Playername : ${Object.values(bot.entities).find(entity => entity.type === 'player' && entity.id === someId)}`)
+                        let currTime = new Date();
+                        console.log(`CAUGHT FAULTY PLAYER : ${player.uuid} AT: ${currTime}`)
+                        console.log(`To Playername : ${Object.values(bot.entities).find(entity => entity.type === 'player' && entity.id === player.uuid)}`)
+                        let alertEmbed = {
+                            color: 0xffff00,
+                            title: `[ID:${botId}] [INVALID PLAYER DETECTED (${player.uuid})] : ${coordinates}`,
+                            timestamp: new Date()
+                        };
+                        client.guilds.cache.forEach(guild => {
+                            try{
+                                guild.channels.cache.find(ch => ch.name === alertsChannel).send('<@&808051486562058290>')
+                                guild.channels.cache.find(ch => ch.name === alertsChannel).send({embed: alertEmbed})
+                            } catch{
+                                //ignore
+                            }
+                        })
                     }
                 }
             })
