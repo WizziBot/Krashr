@@ -84,7 +84,7 @@ function killSwitch(botId){
             followPlayer[botId].follow = false;
             followPlayer[botId].destroy = false;
             followPlayer[botId].player = null;
-            console.log(`[ID:${botId} : [FOLLOW PLAYER (${followPlayer[botId].player})] : [OFF]`)
+            console.log(`[ID:${botId}] [FOLLOW PLAYER (${followPlayer[botId].player})] : [OFF]`)
         }
     } catch(e){
         console.trace(e)
@@ -411,10 +411,10 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         nearBlocks[botId] = getNearBlocks(validblocks,bots[botId].entity.position)
                         let memoryLength = blocks[botId].length;
                         if (memoryLength < 100 && memoryWarning[botId] === true){
-                            console.log(`[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
+                            console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`)
                             let alertEmbed = {
                                 color: 0x0000ff,
-                                title: `[ID:${botId}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`,
+                                title: `[ID:${botId}] [${bot.username}] [#WARNING#] [BLOCK MEMORY AT ${memoryLength}]`,
                                 timestamp: new Date()
                             };
                             client.guilds.cache.forEach(guild => {
@@ -433,10 +433,10 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 } catch(e) {
                     amplifyCounter[botId] += 5
                     if (amplifyCounter > 100) {
-                        console.log(`[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`)
+                        console.log(`[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`)
                         let alertEmbed = {
                             color: 0xff0000,
-                            title: `[ID:${botId}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`,
+                            title: `[ID:${botId}] [${bot.username}] [#WARNING#] [MAXIMUM AMPLIFICATION RANGE REACHED] [TERMINATING FARMING FOR 60s]`,
                             timestamp: new Date()
                         };
                         client.guilds.cache.forEach(guild => {
@@ -530,7 +530,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     console.log('Unable to detect player')
                     let alertEmbed = {
                         color: 0xff0000,
-                        title: `[ID:${botId}] [UNABLE TO DETECT PLAYER]`,
+                        title: `[ID:${botId}] [${bot.username}] [UNABLE TO DETECT PLAYER]`,
                         timestamp: new Date()
                     };
                     client.guilds.cache.forEach(guild => {
@@ -542,7 +542,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 console.log('Unable to detect player')
                 let alertEmbed = {
                     color: 0xff0000,
-                    title: `[ID:${botId}] [UNABLE TO DETECT PLAYER]`,
+                    title: `[ID:${botId}] [${bot.username}] [UNABLE TO DETECT PLAYER]`,
                     timestamp: new Date()
                 };
                 client.guilds.cache.forEach(guild => {
@@ -595,6 +595,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         }
                     } catch(e){
                         console.log(player)
+                        console.log(`CAUGHT FAULTY PLAYER : ${player.uuid}`)
+                        console.log(`To Playername : ${Object.values(bot.entities).find(entity => entity.type === 'player' && entity.id === someId)}`)
                     }
                 }
             })
