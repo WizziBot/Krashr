@@ -31,6 +31,7 @@ let memoryWarning = [];
 let amplifyCounter = [];
 let terminationDelay = [];
 let recursiveMining = [];
+let hasGoal = [];
 let intrusionAlert = {
     range: null,
     do: false,
@@ -53,6 +54,10 @@ function appendNewData(){
     amplifyCounter.push(10)
     terminationDelay.push(true)
     recursiveMining.push(false)
+    hasGoal.push({
+        has: false,
+        goal: null
+    })
     pickUpItems.push({
         item:null,
         do: false,
@@ -123,6 +128,7 @@ function resetVariables(hard = false){
     amplifyCounter = [];
     terminationDelay = [];
     recursiveMining = [];
+    hasGoal = [];
     intrusionAlert = {
         range: null,
         do: false,
@@ -287,7 +293,6 @@ function startFarmLoop(botId,y){
             break
         }
         }
-
         farmKillSwitch[botId] = false;
     } catch(e){
         console.trace(e)
@@ -330,7 +335,7 @@ function checkIfAir(bot,nearbyBlocks){
                     }
                 }
             }
-        }catch(e){
+        } catch(e) {
             console.trace(e)
             return tempNearBlocks
         }
@@ -355,6 +360,26 @@ function qSort(blocksPos,botPos){
     return [...qSort(left,botPos), pivot, ...qSort(right,botPos)];
 
 }
+function goalCheck(botId){
+    if(!hasGoal[botId].has) return
+    if(!hasGoal[botId].goal) {
+        console.log('NO GOALllllllllllllllllllllllllllllllllll')
+        return
+    }
+    let data = bots[botId].blockAt(goal,false);
+    try{
+        if(data){
+            if (data.name !== 'sugar_cane'){
+                hasGoal[botId].has = true
+            }
+        } else {
+            console.log('WHAT THE FUCKkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
+        }
+    } catch(e) {
+        console.trace(e)
+        return tempNearBlocks
+    }
+}
 function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel){
     try{
         let mcData = getData(bot.version)
@@ -366,8 +391,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 bot.lookAt(pos)
             }
         }
-        //## sugarcane farming algoritm VERSION 3.0.1 (iterative)
-        if (!farmKillSwitch[botId] && terminationDelay[botId]) {
+        //## sugarcane farming algoritm VERSION 3.1.0 (iterative)
+        goalCheck(botId)
+        if (!farmKillSwitch[botId] && terminationDelay[botId] && !hasGoal[botId].has) {
+            blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+            blocks[botId] = checkIfAir(bots[botId],blocks[botId])
             let shiftblock = blocks[botId].shift()
             nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
             nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
@@ -377,23 +405,26 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     function rMine(){
                         recursiveMining[botId] = true;
                         let nearblock = nearBlocks[botId].shift()
-                        let currblock = bots[botId].blockAt(nearblock,false)
-                        bots[botId].dig(currblock,(err) => {
-                            if (err) throw err
-                            if(nearBlocks[botId].length > 0){
-                                setTimeout(()=>{
-                                    rMine()
-                                },50)
-                            } else {
-                                recursiveMining[botId] = false;
-                            }
-                        })
+                        if(nearblock){
+                            let currblock = bots[botId].blockAt(nearblock,false)
+                            bots[botId].dig(currblock,(err) => {
+                                if (err) throw err
+                                if(nearBlocks[botId].length > 0){
+                                    setTimeout(()=>{
+                                        rMine()
+                                    },50)
+                                } else {
+                                    recursiveMining[botId] = false;
+                                }
+                            })
+                        } else {
+                            recursiveMining[botId] = false;
+                        }
                     }
                     if(!recursiveMining[botId]){
                         rMine()
                     } else {
-                        blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
-                        blocks[botId] = checkIfAir(bots[botId],blocks[botId])
+                        hasGoal[botId].goal = shiftblock;
                         let currblock = bots[botId].blockAt(shiftblock,false)
                         let movements = new Movements(bot, mcData)
                         movements.canDig = false;
@@ -401,6 +432,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         bots[botId].pathfinder.setMovements(movements)
                         goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
                         bots[botId].pathfinder.setGoal(goal[botId],false)
+                        bots[botId].setControlState('sprint', true);
                     }
                 } else if (shiftblock) {
                     let currblock = bots[botId].blockAt(shiftblock,false)
@@ -410,6 +442,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     bots[botId].pathfinder.setMovements(movements)
                     goal[botId] = new GoalBlock(currblock.position.x, currblock.position.y - 1, currblock.position.z)
                     bots[botId].pathfinder.setGoal(goal[botId],false)
+                    bots[botId].setControlState('sprint', true);
                     let newBlocks = bots[botId].findBlocks({
                         matching: mcData.blocksByName.sugar_cane.id,
                         maxDistance: 10,

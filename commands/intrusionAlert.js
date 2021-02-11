@@ -13,7 +13,7 @@ module.exports = {
                 intrusionAlert.range = null;
                 const embed = {
                     color: 0xff0000,
-                    title: `[ID:ALL] [INTRUSION DETECTION (${range}) BLOCKS] : [OFF]`,
+                    title: `[ID:ALL] [INTRUSION DETECTION] : [OFF]`,
                     author: {
                         name: message.author.username,
                         icon_url: message.author.avatarURL(),
@@ -25,7 +25,7 @@ module.exports = {
                     },
                 };
                 message.guild.channels.cache.find(ch => ch.name === krashr.commandChannel).send({embed: embed})
-                console.log(`[ID:ALL] [INTRUSION DETECTION (${range}) BLOCKS] : [OFF]`)
+                console.log(`[ID:ALL] [INTRUSION DETECTION] : [OFF]`)
             } else if(intrusionAlert.do === false){
                 intrusionAlert.do = true;
                 intrusionAlert.range = parseInt(range);
