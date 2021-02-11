@@ -332,8 +332,11 @@ function checkIfAir(bot,nearbyBlocks){
                 tempNearBlocks.push(block)
             }
         }catch{
+            console.trace(e)
+            console.log('ERR')
             console.log(nearBlocks)
             console.log(data)
+            console.log('ERR')
         }
     })
     return tempNearBlocks
@@ -353,8 +356,7 @@ function qSort(blocksPos,botPos){
         right.push(blocksPos[i])
         }
     }
-    let semiFinal = [...qSort(left,botPos), pivot, ...qSort(right,botPos)];
-    return Array.from(new Set(semiFinal));
+    return [...qSort(left,botPos), pivot, ...qSort(right,botPos)];
 
 }
 function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel){
@@ -368,14 +370,10 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 bot.lookAt(pos)
             }
         }
-        //## sugarcane farming algoritm VERSION 2.10.0 (iterative)
+        //## sugarcane farming algoritm VERSION 2.10.2 (iterative)
         if (!farmKillSwitch[botId] && terminationDelay[botId]) {
             let shiftblock = blocks[botId].shift()
-            console.log('near')
-            console.log(nearBlocks[botId])
             nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
-            console.log(nearBlocks[botId])
-            console.log('near')
             if (nearBlocks[botId].length > 2){
                 nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
             }
@@ -411,9 +409,27 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     let validblocks = getValidBlocks(newBlocks,yLevel)
                     blocks[botId].push(...validblocks)
                     blocks[botId].push(shiftblock)
-                    console.log(blocks[botId])
                     blocks[botId] = checkIfAir(bots[botId],blocks[botId])
+                    console.log('QSORT')
+                    console.log(blocks[botId])
+                    let filtered = []
+                    blocks[botId].forEach((block) => {
+                        console.log('new')
+                        console.log(block)
+                        if (!filtered.includes(block)){
+                            filtered.push(block)
+                        } else {
+                            console.log('DUPLICATE')
+                            console.log(block)
+                        }
+                    })
+                    blocks[botId] = filtered
+                    console.log(blocks[botId])
+                    console.log('QSORT')
                     blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                    console.log('BLOCKS')
+                    console.log(blocks[botId])
+                    console.log('BLOCKS')
                     while (blocks[botId].length > 500){
                         blocks[botId].pop()
                     }
