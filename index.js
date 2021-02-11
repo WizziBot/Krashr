@@ -371,6 +371,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 if (nearblock){
                     amplifyCounter[botId] = 10
                     currblock = bots[botId].blockAt(nearblock,false)
+                    console.log(currblock.name)
                     bots[botId].dig(currblock, (err) => {
                         if (err) console.trace(err)
                     })
@@ -630,7 +631,7 @@ function botLoop(){
                 onTick(bot,counterB,lookAtPlayer[counterB],followPlayer[counterB],pickUpItems[counterB],autosell[counterB],yLevel[counterB])
                 counterB += 1
             })
-        },150)
+        },100)
     } catch(e) {
         console.trace(e)
         console.log('MAINLOOP')
