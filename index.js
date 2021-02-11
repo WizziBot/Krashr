@@ -5,6 +5,7 @@ const fs = require('fs');
 client.commands = new Discord.Collection();
 const mineflayer = require('mineflayer');
 const { Movements, goals } = require('mineflayer-pathfinder');
+const { Vec3 } = require('vec3')
 const GoalFollow = goals.GoalFollow;
 const GoalBlock = goals.GoalBlock;
 let alertWhitelist = require('./whitelist.json');
@@ -30,6 +31,7 @@ let goal = [];
 let memoryWarning = [];
 let amplifyCounter = [];
 let terminationDelay = [];
+let blockMemoryCounter =[]
 let intrusionAlert = {
     range: null,
     do: false,
@@ -53,6 +55,7 @@ function appendNewData(){
     memoryWarning.push(true)
     amplifyCounter.push(10)
     terminationDelay.push(true)
+    blockMemoryCounter.push(0)
     pickUpItems.push({
         item:null,
         do: false,
@@ -107,6 +110,31 @@ function activateKillSwitch(botId,message){
     };
     message.guild.channels.cache.find(ch => ch.name === commandChannel).send({embed: embed})
 }
+function resetVariables(){
+    chatOn = [];
+    lookAtPlayer = [];
+    pickUpItems = [];
+    followPlayer = [];
+    autosell = [];
+    autoeat = [];
+    farmKillSwitch = [];
+    yLevel = [];
+    blocks = [];
+    nearBlocks = [];
+    goal = [];
+    memoryWarning = [];
+    amplifyCounter = [];
+    terminationDelay = [];
+    intrusionAlert = {
+        range: null,
+        do: false,
+        delay: true,
+    };
+    blacklistAlert = {
+        do: false,
+        delay: true,
+    };
+}
 function addBot(bot){
     if(bot){
         bots.push(bot)
@@ -158,12 +186,12 @@ client.on('message',async message => {
 
         if (command === 'login'){
             appendNewData()
-            client.commands.get('login').execute(bots.length,accounts[bots.length],client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
+            client.commands.get('login').execute(bots.length,accounts[bots.length],client,message,commandArgs,mineflayer,getChatOn,addBot,resetVariables,krashr)
         } else if (command === 'loginall'){
             let counter = bots.length;
             accounts.forEach((account) => {
                 appendNewData()
-                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,krashr)
+                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,resetVariables,krashr)
                 counter += 1;
             })
         }
@@ -223,29 +251,7 @@ client.on('message',async message => {
                 bot.quit()
             })
             bots = []
-            chatOn = [];
-            lookAtPlayer = [];
-            pickUpItems = [];
-            followPlayer = [];
-            autosell = [];
-            autoeat = [];
-            farmKillSwitch = [];
-            yLevel = [];
-            blocks = [];
-            nearBlocks = [];
-            goal = [];
-            memoryWarning = [];
-            amplifyCounter = [];
-            terminationDelay = [];
-            intrusionAlert = {
-                range: null,
-                do: false,
-                delay: true,
-            };
-            blacklistAlert = {
-                do: false,
-                delay: true,
-            };
+            resetVariables()
         } else if (command === 'showwhitelist'){
             message.guild.channels.cache.find(ch => ch.name === commandChannel).send(JSON.stringify(alertWhitelist))
         } else if (command === 'showblacklist'){
@@ -324,18 +330,21 @@ function getNearBlocks(blocksToSort,botPos){
 }
 function checkIfAir(bot,nearbyBlocks){
     let tempNearBlocks = []
+    let lastBlock = new Vec3(0,0,0)
     nearbyBlocks.forEach(block => {
         let data = bot.blockAt(block,false);
         try{
-            if (data.name === 'sugar_cane'){
-                tempNearBlocks.push(block)
+            if(data){
+                if (data.name === 'sugar_cane'){
+                    if(block.x !== lastBlock.x || block.z !== lastBlock.z){
+                        tempNearBlocks.push(block)
+                        lastBlock = block
+                    }
+                }
             }
-        }catch{
+        }catch(e){
             console.trace(e)
-            console.log('ERR')
-            console.log(nearBlocks)
-            console.log(data)
-            console.log('ERR')
+            return nearbyBlocks
         }
     })
     return tempNearBlocks
@@ -369,13 +378,11 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                 bot.lookAt(pos)
             }
         }
-        //## sugarcane farming algoritm VERSION 2.10.2 (iterative)
+        //## sugarcane farming algoritm VERSION 2.11.3 (iterative)
         if (!farmKillSwitch[botId] && terminationDelay[botId]) {
             let shiftblock = blocks[botId].shift()
             nearBlocks[botId] = checkIfAir(bots[botId],nearBlocks[botId])
-            if (nearBlocks[botId].length > 2){
-                nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
-            }
+            nearBlocks[botId] = qSort(nearBlocks[botId],bots[botId].entity.position)
             let nearblock = nearBlocks[botId].shift()
             try{
                 let currblock;
@@ -408,32 +415,8 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                     let validblocks = getValidBlocks(newBlocks,yLevel)
                     blocks[botId].push(...validblocks)
                     blocks[botId].push(shiftblock)
-                    blocks[botId] = checkIfAir(bots[botId],blocks[botId])
-                    console.log('QSORT')
-                    console.log(blocks[botId])
-                    var arrayUnique = function (arr) {
-                        return arr.filter(function(item, index){
-                            return arr.indexOf(item) >= index;
-                        });
-                    };
-                    let filtered = []
-                    blocks[botId].forEach((block) => {
-                        console.log('new')
-                        console.log(block)
-                        if (!filtered.includes(block)){
-                            filtered.push(block)
-                        } else {
-                            console.log('DUPLICATE')
-                            console.log(block)
-                        }
-                    })
-                    blocks[botId] = filtered
-                    console.log(blocks[botId])
-                    console.log('QSORT')
                     blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
-                    console.log('BLOCKS')
-                    console.log(blocks[botId])
-                    console.log('BLOCKS')
+                    blocks[botId] = checkIfAir(bots[botId],blocks[botId])
                     while (blocks[botId].length > 500){
                         blocks[botId].pop()
                     }
@@ -489,6 +472,7 @@ function onTick(bot,botId,lookAtPlayer,followPlayer,pickUpItems,autosell,yLevel)
                         })
                         blocks[botId] = getValidBlocks(blocks[botId],yLevel)
                         blocks[botId] = qSort(blocks[botId],bots[botId].entity.position)
+                        blocks[botId] = checkIfAir(bots[botId],blocks[botId])
                         nearBlocks[botId] = getNearBlocks(blocks[botId],bots[botId].entity.position)
                     }
                 }
